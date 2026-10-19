@@ -1,0 +1,6 @@
+packages:
+  - '.'
+
+# pnpm 11 默认阻止依赖执行构建脚本；esbuild 需要安装平台二进制
+allowBuilds:
+  esbuild: true
