@@ -133,11 +133,6 @@
             </dependency>
             <dependency>
                 <groupId>com.ghb</groupId>
-                <artifactId>flash-sale-order</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.ghb</groupId>
                 <artifactId>flash-sale-analytics</artifactId>
                 <version>${project.version}</version>
             </dependency>

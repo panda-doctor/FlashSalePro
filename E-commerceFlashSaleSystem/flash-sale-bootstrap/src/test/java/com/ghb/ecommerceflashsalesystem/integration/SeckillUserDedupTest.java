@@ -154,9 +154,11 @@ public class SeckillUserDedupTest {
 
         String key = CacheKeyConstant.SECKILL_USER_PREFIX + ACTIVITY_ID + ":" + USER_A;
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-        // 刚建令牌 TTL 应接近 30 分钟：>0 且不超过常量值（曾误断言等于 0）
+        // 令牌需覆盖活动剩余窗口（setUp 中活动 endTime = now + 2h），不能只存活 30 分钟，
+        // 否则过期后同一用户可再次扣库存却无法落单（库存泄漏）。
         assertThat(ttl).isGreaterThan(0L);
-        assertThat(ttl).isLessThanOrEqualTo(CacheKeyConstant.SECKILL_USER_TOKEN_TTL);
+        assertThat(ttl).isGreaterThan(TimeUnit.HOURS.toSeconds(1));
+        assertThat(ttl).isLessThanOrEqualTo(CacheKeyConstant.SECKILL_USER_TOKEN_MAX_TTL);
     }
 
     // ---------- 用例4：售罄回滚令牌 ----------

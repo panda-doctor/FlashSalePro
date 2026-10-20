@@ -22,6 +22,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
@@ -187,10 +188,14 @@ public class SeckillServiceImpl implements SeckillService {
         String stockKey = CacheKeyConstant.SECKILL_STOCK_PREFIX + activityId;
         String tokenKey = CacheKeyConstant.SECKILL_USER_PREFIX + activityId + ":" + userId;
 
+        // 令牌必须活到活动结束：固定 30 分钟 TTL 会在长活动里提前失效，
+        // 届时同一用户可再次扣库存，但订单侧 uk_activity_user 会拒绝落库 → 库存被扣却无订单。
+        long tokenTtlSeconds = resolveTokenTtl(now, activityVO.getEndTime());
+
         Long result = redisTemplate.execute(seckillExecuteScript,
                 Arrays.asList(stockKey, tokenKey),
                 "1",
-                CacheKeyConstant.SECKILL_USER_TOKEN_TTL);
+                tokenTtlSeconds);
 
         //处理返回值
         if (result == null) {
@@ -248,6 +253,17 @@ public class SeckillServiceImpl implements SeckillService {
             log.error("脚本返回未知值: {}, activityId={}, userId={}", result, activityId, userId);
             throw new BusinessException(ResultCode.SYSTEM_ERROR, "系统异常");
         }
+    }
+
+    /**
+     * 幂等令牌 TTL：覆盖到活动结束再多留 60s，避免「活动跨天但令牌 30 分钟过期」导致重复扣减。
+     * 下限取默认 30 分钟（活动即将结束时仍需防短时重试），上限 7 天（防御异常超长活动）。
+     */
+    private long resolveTokenTtl(LocalDateTime now, LocalDateTime endTime) {
+        long untilEnd = Duration.between(now, endTime).getSeconds() + CacheKeyConstant.SECKILL_CACHE_TTL_EXTRA;
+        return Math.min(
+                Math.max(untilEnd, CacheKeyConstant.SECKILL_USER_TOKEN_TTL),
+                CacheKeyConstant.SECKILL_USER_TOKEN_MAX_TTL);
     }
 
     /**

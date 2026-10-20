@@ -3,13 +3,10 @@ package com.ghb.ecommerceflashsalesystem.product.storage.impl;
 import com.ghb.ecommerceflashsalesystem.common.api.ResultCode;
 import com.ghb.ecommerceflashsalesystem.common.exception.BusinessException;
 import com.ghb.ecommerceflashsalesystem.product.storage.AbstractImageStorage;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,7 +21,8 @@ import java.time.format.DateTimeFormatter;
  *
  * 落盘目录：{storage.local.dir:uploads}/{yyyyMM}/uuid.ext（按月份分目录）
  * 访问：通过 FileStorageWebConfig 把 /uploads/** 映射到本地目录（磁盘读取，零额外成本）。
- * 完整 URL 在 HTTP 请求上下文中拼接当前协议/主机/端口；非请求上下文（如单测）退化为相对路径。
+ * 返回值固定为站内相对路径 {@code /uploads/yyyyMM/uuid.ext}，由网关/前端同源代理读取；
+ * 不再按请求 host 拼绝对地址（经网关转发会拿到内网 IP，浏览器无法访问）。
  */
 @Slf4j
 @Service
@@ -51,27 +49,14 @@ public class LocalImageStorageService extends AbstractImageStorage {
             throw new BusinessException(ResultCode.SYSTEM_ERROR, "图片保存失败，请稍后重试");
         }
 
-        String relative = "/uploads/" + month + "/" + fileName;
-        return toPublicUrl(relative);
+        // 只返回站内相对路径：图片经网关 /uploads/** 或前端同源代理读取。
+        // 曾按请求 host 拼绝对地址，经网关转发后拿到的是容器/主机内网 IP（如 172.21.112.1:8084），
+        // 浏览器无法直连 8084，导致所有商品图 404。
+        return "/uploads/" + month + "/" + fileName;
     }
 
     @Override
     public String type() {
         return "local";
-    }
-
-    /** 相对路径 -> 当前请求主机下的完整 URL */
-    private String toPublicUrl(String relative) {
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs == null) {
-            // 非 Web 请求上下文（测试直接调用服务层）：退化返回相对路径
-            return relative;
-        }
-        HttpServletRequest req = attrs.getRequest();
-        String scheme = req.isSecure() ? "https" : "http";
-        int port = req.getServerPort();
-        String hostPort = (port == 80 || port == 443) ? req.getServerName() : req.getServerName() + ":" + port;
-        return scheme + "://" + hostPort + relative;
     }
 }

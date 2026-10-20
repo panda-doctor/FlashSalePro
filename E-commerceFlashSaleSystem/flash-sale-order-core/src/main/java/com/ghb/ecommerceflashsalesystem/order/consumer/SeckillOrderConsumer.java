@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 秒杀订单 Stream 消费者（第 3 阶段 Day 3/4）
@@ -209,7 +210,13 @@ public class SeckillOrderConsumer {
                 ack(record);
             } catch (DuplicateKeyException e) {
                 // DB 唯一键兜底（uk_activity_user / uk_order_no）：视为已处理，同属订单成功路径
-                log.warn("订单唯一键冲突，幂等处理: orderNo={}", message.getOrderNo());
+                boolean orderPersisted = seckillOrderMapper.selectByOrderNo(message.getOrderNo()) != null;
+                log.warn("订单唯一键冲突，幂等处理: orderNo={}, orderPersisted={}", message.getOrderNo(), orderPersisted);
+                if (!orderPersisted) {
+                    // uk_activity_user 冲突 = 同一用户在本场已下单，本条消息是重复扣减：
+                    // 库存已在 seckill 侧扣掉，必须回补，否则「扣了库存却没有订单」形成永久泄漏。
+                    refundStockForDuplicate(message);
+                }
                 rankService.recordSuccess(message.getActivityId(), message.getUserId(), message.getRequestTime(),
                     message.getOrderNo());
                 markSuccess(logEntity, message.getOrderNo());
@@ -296,6 +303,35 @@ public class SeckillOrderConsumer {
             return seckillMessageLogMapper.selectOne(
                     new LambdaQueryWrapper<SeckillMessageLog>()
                             .eq(SeckillMessageLog::getStreamMessageId, messageId));
+        }
+    }
+
+    /**
+     * 重复提交的库存回补（幂等）：仅当本消息 orderNo 未落库时调用，
+     * 且用 `seckill:stock:refund:{orderNo}` 标记防止消息重放导致二次回补。
+     * 库存键不存在（活动已结束、缓存被清理）时跳过，绝不凭空创建库存键。
+     */
+    private void refundStockForDuplicate(SeckillOrderMessage message) {
+        Long activityId = message.getActivityId();
+        String orderNo = message.getOrderNo();
+        if (activityId == null || orderNo == null) {
+            return;
+        }
+
+        String refundKey = CacheKeyConstant.SECKILL_STOCK_REFUND_PREFIX + orderNo;
+        Boolean first = redisTemplate.opsForValue().setIfAbsent(refundKey, "1", 1, TimeUnit.DAYS);
+        if (!Boolean.TRUE.equals(first)) {
+            log.info("重复订单已回补过库存，跳过: orderNo={}", orderNo);
+            return;
+        }
+
+        String stockKey = CacheKeyConstant.SECKILL_STOCK_PREFIX + activityId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(stockKey))) {
+            redisTemplate.opsForValue().increment(stockKey);
+            log.warn("重复提交回补库存成功: activityId={}, userId={}, orderNo={}",
+                    activityId, message.getUserId(), orderNo);
+        } else {
+            log.warn("库存键已不存在，跳过回补: activityId={}, orderNo={}", activityId, orderNo);
         }
     }
 

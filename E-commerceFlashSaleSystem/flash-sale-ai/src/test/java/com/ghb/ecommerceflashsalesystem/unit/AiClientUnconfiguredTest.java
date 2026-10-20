@@ -7,7 +7,6 @@ import com.ghb.ecommerceflashsalesystem.ai.config.AiLlmProperties;
 import com.ghb.ecommerceflashsalesystem.ai.client.OpenAiChatMessage;
 import com.ghb.ecommerceflashsalesystem.ai.client.OpenAiCompatibleChatClient;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
@@ -55,6 +54,6 @@ public class AiClientUnconfiguredTest {
     }
 
     private OpenAiCompatibleChatClient buildClient(AiLlmProperties props) {
-        return new OpenAiCompatibleChatClient(props, RestClient.builder(), new ObjectMapper());
+        return new OpenAiCompatibleChatClient(props, new ObjectMapper());
     }
 }

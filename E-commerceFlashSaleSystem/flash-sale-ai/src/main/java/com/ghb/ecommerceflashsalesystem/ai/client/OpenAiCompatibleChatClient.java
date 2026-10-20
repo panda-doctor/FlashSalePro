@@ -37,16 +37,13 @@ public class OpenAiCompatibleChatClient implements LlmChatClient {
     private static final int MAX_EMPTY_RETRY = 1;
 
     private final AiLlmProperties properties;
-    private final RestClient.Builder restClientBuilder;
     private final ObjectMapper objectMapper;
 
     private RestClient restClient;
 
     public OpenAiCompatibleChatClient(AiLlmProperties properties,
-                                      RestClient.Builder restClientBuilder,
                                       ObjectMapper objectMapper) {
         this.properties = properties;
-        this.restClientBuilder = restClientBuilder;
         this.objectMapper = objectMapper;
     }
 
@@ -130,7 +127,10 @@ public class OpenAiCompatibleChatClient implements LlmChatClient {
                 int timeoutMs = properties.getTimeoutSeconds() * 1000;
                 factory.setConnectTimeout(timeoutMs);
                 factory.setReadTimeout(timeoutMs);
-                this.restClient = restClientBuilder.requestFactory(factory).build();
+                // 必须用普通 builder：容器内唯一的 RestClient.Builder 是 flash-sale-remote 提供的
+                // @LoadBalanced 版本，它会把 https://api.deepseek.com 当作服务名去 Nacos 解析，
+                // 导致 "No instances available for api.deepseek.com"（大模型是外部地址，不走服务发现）。
+                this.restClient = RestClient.builder().requestFactory(factory).build();
             }
         }
     }

@@ -56,9 +56,22 @@ public class CacheKeyConstant {
     public static final String SECKILL_USER_PREFIX = "seckill:user:";
 
     /**
-     * 幂等令牌 TTL（秒），30 分钟
+     * 幂等令牌兜底 TTL（秒），30 分钟。
+     * 仅当活动剩余时间不足该值时使用；正常应覆盖到活动结束（见 {@link #SECKILL_USER_TOKEN_MAX_TTL}）。
      */
     public static final long SECKILL_USER_TOKEN_TTL = 30 * 60L;
+
+    /**
+     * 幂等令牌最大 TTL（秒），7 天。
+     * 令牌必须活到活动结束：TTL 短于活动窗口时，过期后同一用户可再次扣减库存，
+     * 而订单侧 uk_activity_user 唯一键会拒绝落库 → 库存被扣却没有订单（永久泄漏）。
+     */
+    public static final long SECKILL_USER_TOKEN_MAX_TTL = 7 * 24 * 60 * 60L;
+
+    /**
+     * 重复扣减的库存回补幂等标记前缀，完整键: seckill:stock:refund:{orderNo}
+     */
+    public static final String SECKILL_STOCK_REFUND_PREFIX = "seckill:stock:refund:";
 
     /**
      * 限流键前缀，完整键: rate:limit:{activityId}:{userId}（E4：粒度 userId → userId+activity，避免多活动互伤）
