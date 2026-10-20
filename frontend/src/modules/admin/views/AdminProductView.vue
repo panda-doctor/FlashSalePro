@@ -1,46 +1,42 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Edit3, Plus, Search } from 'lucide-vue-next'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Edit3, Eye, Plus, RefreshCw, Search } from 'lucide-vue-next'
 import ProductForm from '@/modules/admin/components/ProductForm.vue'
 import ProductImage from '@/modules/product/components/ProductImage.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
-import { getAdminProduct, saveAdminProduct } from '@/modules/product/api'
+import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
+import { getAdminProduct, pageAdminProducts, saveAdminProduct } from '@/modules/product/api'
+import { usePagedQuery } from '@/shared/composables/usePagedQuery'
 import { ApiError } from '@/shared/types/common'
-import type { ProductRequest, ProductVO } from '@/modules/product/types'
 import { formatPrice } from '@/shared/utils/money'
+import type { ProductRequest, ProductStatus, ProductVO } from '@/modules/product/types'
 
-const searchId = ref('')
-const product = ref<ProductVO | null>(null)
-const loading = ref(false)
-const errorMessage = ref('')
+type ProductQuery = { keyword: string; status: ProductStatus | 'ALL' }
+
+const { items, total, page, pageSize, query, loading, error, search, reset, setPage, setPageSize, refresh } =
+  usePagedQuery<ProductVO, ProductQuery>({
+    fetcher: pageAdminProducts,
+    initialQuery: { keyword: '', status: 'ALL' },
+    pageSize: 10,
+  })
 
 const dialogOpen = ref(false)
 const editing = ref<ProductVO | null>(null)
 const saving = ref(false)
+const togglingId = ref<number | null>(null)
 
-function loadProduct(): void {
-  const id = searchId.value.trim()
-  if (!id) {
-    product.value = null
-    errorMessage.value = '请输入商品 ID'
-    return
-  }
+const lookupId = ref('')
+const lookupLoading = ref(false)
 
-  loading.value = true
-  errorMessage.value = ''
+const statusOptions: Array<{ value: ProductStatus | 'ALL'; label: string }> = [
+  { value: 'ALL', label: '全部状态' },
+  { value: 'ON_SHELF', label: '上架' },
+  { value: 'OFF_SHELF', label: '下架' },
+]
 
-  getAdminProduct(id)
-    .then((data) => {
-      product.value = data
-    })
-    .catch((error: unknown) => {
-      product.value = null
-      errorMessage.value = error instanceof ApiError ? error.message : '商品查询失败'
-    })
-    .finally(() => {
-      loading.value = false
-    })
+function asProduct(row: unknown): ProductVO {
+  return row as ProductVO
 }
 
 function openCreate(): void {
@@ -48,10 +44,29 @@ function openCreate(): void {
   dialogOpen.value = true
 }
 
-function openEdit(): void {
-  if (!product.value) return
-  editing.value = product.value
+function openEdit(product: ProductVO): void {
+  editing.value = product
   dialogOpen.value = true
+}
+
+function openById(): void {
+  const id = lookupId.value.trim()
+  if (!id) {
+    ElMessage.warning('请输入商品 ID')
+    return
+  }
+
+  lookupLoading.value = true
+  getAdminProduct(id)
+    .then((data) => {
+      openEdit(data)
+    })
+    .catch((err: unknown) => {
+      ElMessage.error(err instanceof ApiError ? err.message : '商品查询失败')
+    })
+    .finally(() => {
+      lookupLoading.value = false
+    })
 }
 
 function onSubmit(payload: ProductRequest): void {
@@ -60,16 +75,47 @@ function onSubmit(payload: ProductRequest): void {
   saveAdminProduct(payload)
     .then((result) => {
       ElMessage.success(payload.productId ? '商品已更新' : '商品已创建')
-      // 该接口是唯一返回字符串 productId 的端点
-      searchId.value = String(result.productId)
+      lookupId.value = String(result.productId)
       dialogOpen.value = false
-      loadProduct()
+      refresh()
     })
-    .catch((error: unknown) => {
-      ElMessage.error(error instanceof ApiError ? error.message : '保存失败')
+    .catch((err: unknown) => {
+      ElMessage.error(err instanceof ApiError ? err.message : '保存失败')
     })
     .finally(() => {
       saving.value = false
+    })
+}
+
+function toggleShelf(product: ProductVO): void {
+  const next: ProductStatus = product.status === 'ON_SHELF' ? 'OFF_SHELF' : 'ON_SHELF'
+  const action = next === 'ON_SHELF' ? '上架' : '下架'
+
+  ElMessageBox.confirm(`确认${action}「${product.name}」？`, `${action}商品`, {
+    confirmButtonText: `确认${action}`,
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      togglingId.value = product.productId
+      return saveAdminProduct({
+        productId: product.productId,
+        name: product.name,
+        description: product.description ?? undefined,
+        imageUrl: product.imageUrl ?? undefined,
+        originalPrice: product.originalPrice,
+        totalStock: product.totalStock,
+        status: next,
+      }).then(() => {
+        ElMessage.success(`已${action}`)
+        refresh()
+      })
+    })
+    .catch((err: unknown) => {
+      if (err instanceof ApiError) ElMessage.error(err.message)
+    })
+    .finally(() => {
+      togglingId.value = null
     })
 }
 </script>
@@ -80,7 +126,7 @@ function onSubmit(payload: ProductRequest): void {
       <div>
         <h2 class="text-xl font-semibold">商品管理</h2>
         <p class="mt-1 text-sm text-ink-500">
-          管理端仅提供「按 ID 查询」与「创建/更新」接口，没有商品列表接口；浏览全量商品请前往商城货架。
+          全量商品（含已下架）分页浏览，支持关键字与状态筛选、编辑与一键上下架。
         </p>
       </div>
       <el-button type="primary" @click="openCreate">
@@ -90,89 +136,157 @@ function onSubmit(payload: ProductRequest): void {
     </header>
 
     <section class="surface-card mt-5 p-4">
-      <form class="flex flex-wrap items-end gap-3" @submit.prevent="loadProduct">
-        <div class="w-full sm:w-64">
-          <label for="admin-product-id" class="mb-1 block text-xs text-ink-500">商品 ID</label>
-          <el-input id="admin-product-id" v-model="searchId" placeholder="输入商品 ID 后查询" clearable>
+      <form class="flex flex-wrap items-end gap-3" @submit.prevent="search">
+        <div class="w-full sm:w-60">
+          <label for="admin-product-keyword" class="mb-1 block text-xs text-ink-500">商品名称</label>
+          <el-input
+            id="admin-product-keyword"
+            v-model="query.keyword"
+            placeholder="输入商品名称关键字"
+            clearable
+            @clear="search"
+          >
             <template #prefix>
               <Search :size="15" aria-hidden="true" />
             </template>
           </el-input>
         </div>
+
+        <div class="w-full sm:w-36">
+          <label for="admin-product-status" class="mb-1 block text-xs text-ink-500">状态</label>
+          <el-select id="admin-product-status" v-model="query.status" class="w-full" @change="search">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </div>
+
         <el-button type="primary" native-type="submit" :loading="loading">查询</el-button>
-        <RouterLink :to="{ name: 'products' }" class="ml-auto text-sm">
-          <el-button text type="primary">去商城货架浏览</el-button>
-        </RouterLink>
+        <el-button :disabled="loading" @click="reset">重置</el-button>
+
+        <div class="ml-auto flex items-end gap-2">
+          <div class="w-32">
+            <label for="admin-product-lookup" class="mb-1 block text-xs text-ink-500">按 ID 打开</label>
+            <el-input
+              id="admin-product-lookup"
+              v-model="lookupId"
+              placeholder="商品 ID"
+              clearable
+              @keyup.enter="openById"
+            />
+          </div>
+          <el-button :loading="lookupLoading" @click="openById">打开</el-button>
+          <el-button text :disabled="loading" @click="refresh">
+            <RefreshCw :size="14" class="mr-1" aria-hidden="true" />
+            刷新
+          </el-button>
+        </div>
       </form>
     </section>
 
     <section class="mt-5">
-      <div v-if="loading" class="surface-card flex gap-6 p-6">
-        <div class="h-40 w-40 animate-pulse rounded-lg bg-muted" />
-        <div class="flex-1 space-y-3">
-          <div class="h-6 w-1/2 animate-pulse rounded bg-muted" />
-          <div class="h-4 w-1/3 animate-pulse rounded bg-muted" />
-          <div class="h-16 animate-pulse rounded bg-muted" />
-        </div>
+      <div v-if="loading && !items.length" class="surface-card space-y-3 p-5">
+        <SkeletonBlock v-for="index in 5" :key="index" class="h-12" />
       </div>
 
       <EmptyState
-        v-else-if="errorMessage"
-        title="未查询到商品"
-        :description="errorMessage"
-        action-text="重新查询"
-        @action="loadProduct"
+        v-else-if="error"
+        title="商品加载失败"
+        :description="error"
+        action-text="重新加载"
+        @action="refresh"
       />
 
-      <div v-else-if="product" class="surface-card p-6">
-        <div class="flex flex-col gap-6 sm:flex-row">
-          <div class="h-40 w-full shrink-0 overflow-hidden rounded-lg border border-line sm:w-40">
-            <ProductImage :src="product.imageUrl" :alt="product.name" eager />
-          </div>
+      <template v-else>
+        <div class="surface-card overflow-hidden">
+          <el-table :data="items" row-key="productId" class="w-full" table-layout="fixed">
+            <el-table-column label="商品" min-width="240">
+              <template #default="{ row }">
+                <div class="flex items-center gap-3">
+                  <div class="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-line/70">
+                    <ProductImage :src="asProduct(row).imageUrl" :alt="asProduct(row).name" eager />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-ink-900">{{ asProduct(row).name }}</p>
+                    <p class="num mt-0.5 text-xs text-ink-500">#{{ asProduct(row).productId }}</p>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
 
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="text-lg font-semibold">{{ product.name }}</h3>
-              <el-tag :type="product.status === 'ON_SHELF' ? 'success' : 'info'" size="small" effect="light">
-                {{ product.status === 'ON_SHELF' ? '上架' : '下架' }}
-              </el-tag>
-            </div>
+            <el-table-column label="原价" width="110" align="right">
+              <template #default="{ row }">
+                <span class="num text-sm font-medium text-price">{{ formatPrice(asProduct(row).originalPrice) }}</span>
+              </template>
+            </el-table-column>
 
-            <p class="num mt-2 text-2xl font-semibold text-price">{{ formatPrice(product.originalPrice) }}</p>
-            <p class="mt-1 text-sm text-ink-500">
-              总库存
-              <span class="num text-ink-900">{{ product.totalStock }}</span>
-              ｜ 可用库存
-              <span class="num text-ink-900">{{ product.availableStock }}</span>
-              ｜ 商品 ID
-              <span class="num text-ink-900">{{ product.productId }}</span>
-            </p>
-            <p class="mt-3 line-clamp-3 text-sm leading-6 text-ink-500">
-              {{ product.description || '商家未填写商品描述。' }}
-            </p>
+            <el-table-column label="库存（可用/总）" width="140" align="right">
+              <template #default="{ row }">
+                <span class="num text-sm text-ink-900">{{ asProduct(row).availableStock }}</span>
+                <span class="num text-xs text-ink-500"> / {{ asProduct(row).totalStock }}</span>
+              </template>
+            </el-table-column>
 
-            <div class="mt-5 flex flex-wrap gap-2">
-              <el-button type="primary" plain @click="openEdit">
-                <Edit3 :size="14" class="mr-1.5" aria-hidden="true" />
-                编辑商品
-              </el-button>
-              <RouterLink :to="{ name: 'product-detail', params: { id: product.productId } }">
-                <el-button text type="primary">在商城中查看</el-button>
-              </RouterLink>
-            </div>
-          </div>
+            <el-table-column label="状态" width="92" align="center">
+              <template #default="{ row }">
+                <el-tag :type="asProduct(row).status === 'ON_SHELF' ? 'success' : 'info'" size="small" effect="light">
+                  {{ asProduct(row).status === 'ON_SHELF' ? '上架' : '下架' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="操作" width="230" align="right">
+              <template #default="{ row }">
+                <el-button text type="primary" @click="openEdit(asProduct(row))">
+                  <Edit3 :size="14" class="mr-1" aria-hidden="true" />
+                  编辑
+                </el-button>
+                <el-button
+                  text
+                  :type="asProduct(row).status === 'ON_SHELF' ? 'warning' : 'success'"
+                  :loading="togglingId === asProduct(row).productId"
+                  @click="toggleShelf(asProduct(row))"
+                >
+                  {{ asProduct(row).status === 'ON_SHELF' ? '下架' : '上架' }}
+                </el-button>
+                <RouterLink :to="{ name: 'product-detail', params: { id: asProduct(row).productId } }">
+                  <el-button text>
+                    <Eye :size="14" class="mr-1" aria-hidden="true" />
+                    查看
+                  </el-button>
+                </RouterLink>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <EmptyState
+            v-if="!items.length"
+            title="没有符合条件的商品"
+            description="调整关键字或状态后重试，也可以直接新建商品。"
+            action-text="新建商品"
+            @action="openCreate"
+          />
         </div>
-      </div>
 
-      <div v-else class="surface-card p-10 text-center">
-        <p class="text-[15px] font-medium text-ink-900">输入商品 ID 开始编辑</p>
-        <p class="mx-auto mt-1.5 max-w-md text-sm leading-6 text-ink-500">
-          也可以直接新建商品。保存后会返回真实 productId，并自动回填到查询框。
-        </p>
-      </div>
+        <div class="mt-4 flex justify-end">
+          <el-pagination
+            :current-page="page"
+            :page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            background
+            layout="total, sizes, prev, pager, next"
+            @current-change="setPage"
+            @size-change="setPageSize"
+          />
+        </div>
+      </template>
     </section>
 
-    <el-dialog v-model="dialogOpen" :title="editing ? '编辑商品' : '新建商品'" width="min(560px, 92vw)" destroy-on-close>
+    <el-dialog
+      v-model="dialogOpen"
+      :title="editing ? '编辑商品' : '新建商品'"
+      width="min(560px, 92vw)"
+      destroy-on-close
+    >
       <ProductForm :initial="editing" :submitting="saving" @submit="onSubmit" @cancel="dialogOpen = false" />
     </el-dialog>
   </div>

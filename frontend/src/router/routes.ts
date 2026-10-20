@@ -94,9 +94,21 @@ export const routes: RouteRecordRaw[] = [
     path: '/admin',
     name: 'admin',
     component: () => import('@/modules/admin/layouts/AdminLayout.vue'),
-    redirect: { name: 'admin-products' },
+    redirect: { name: 'admin-dashboard' },
     meta: { title: '管理台', requiresAdmin: true },
     children: [
+      {
+        path: 'dashboard',
+        name: 'admin-dashboard',
+        component: () => import('@/modules/admin/views/AdminDashboardView.vue'),
+        meta: { title: '经营看板', requiresAdmin: true },
+      },
+      {
+        path: 'activities',
+        name: 'admin-activities',
+        component: () => import('@/modules/admin/views/AdminActivityView.vue'),
+        meta: { title: '活动运维', requiresAdmin: true },
+      },
       {
         path: 'products',
         name: 'admin-products',
@@ -104,10 +116,16 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '商品管理', requiresAdmin: true },
       },
       {
-        path: 'activities',
-        name: 'admin-activities',
-        component: () => import('@/modules/admin/views/AdminActivityView.vue'),
-        meta: { title: '活动运维', requiresAdmin: true },
+        path: 'orders',
+        name: 'admin-orders',
+        component: () => import('@/modules/admin/views/AdminOrderView.vue'),
+        meta: { title: '订单管理', requiresAdmin: true },
+      },
+      {
+        path: 'dead-letters',
+        name: 'admin-dead-letters',
+        component: () => import('@/modules/admin/views/AdminDeadLetterView.vue'),
+        meta: { title: '死信管理', requiresAdmin: true },
       },
       {
         path: 'users',

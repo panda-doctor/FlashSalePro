@@ -1,151 +1,82 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Camera, Flame, Plus, RotateCcw, Search } from 'lucide-vue-next'
-import ActivityForm from '@/modules/admin/components/ActivityForm.vue'
-import MetricsPanel from '@/modules/analytics/components/MetricsPanel.vue'
-import DeadLetterPanel from '@/modules/admin/components/DeadLetterPanel.vue'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Plus, RefreshCw, Search, Settings2 } from 'lucide-vue-next'
+import ActivityOpsDrawer from '@/modules/admin/components/ActivityOpsDrawer.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
-import { getActivity, preheatActivity, resetActivityStock, saveAdminActivity } from '@/modules/activity/api'
-import { getProduct } from '@/modules/product/api'
-import { captureSnapshot } from '@/modules/order/api'
-import { ApiError } from '@/shared/types/common'
-import type { ActivityRequest, SeckillActivityVO } from '@/modules/activity/types'
+import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
+import { pageAdminActivities } from '@/modules/activity/api'
+import { usePagedQuery } from '@/shared/composables/usePagedQuery'
+import { formatPrice } from '@/shared/utils/money'
+import type { ActivityItemVO, ActivityStatus } from '@/modules/activity/types'
 
-type ActionKind = 'preheat' | 'reset' | 'snapshot'
+type ActivityQuery = { keyword: string; status: ActivityStatus | 'ALL' }
 
-/** 记住最近一次运维的活动，刷新页面后自动回到该对象 */
-const LAST_ACTIVITY_KEY = 'flash.admin.activityId'
+const route = useRoute()
+const router = useRouter()
 
-const activeTab = ref('config')
-const searchId = ref('')
-const activity = ref<SeckillActivityVO | null>(null)
-const productName = ref('')
-const loadingActivity = ref(false)
-const saving = ref(false)
-const acting = ref<ActionKind | null>(null)
+const { items, total, page, pageSize, query, loading, error, search, reset, setPage, setPageSize, refresh } =
+  usePagedQuery<ActivityItemVO, ActivityQuery>({
+    fetcher: pageAdminActivities,
+    initialQuery: { keyword: '', status: 'ALL' },
+    pageSize: 10,
+  })
 
-const formKey = computed(() => (activity.value ? `activity-${activity.value.activityId}` : 'activity-new'))
+const drawerOpen = ref(false)
+const drawerActivityId = ref<number | null>(null)
 
-function resolveProductName(productId: number): void {
-  getProduct(productId)
-    .then((data) => {
-      productName.value = data.name
-    })
-    .catch((error: unknown) => {
-      productName.value = ''
-      console.error('商品名称解析失败', error)
-    })
+const statusOptions: Array<{ value: ActivityStatus | 'ALL'; label: string }> = [
+  { value: 'ALL', label: '全部状态' },
+  { value: 'NOT_STARTED', label: '未开始' },
+  { value: 'RUNNING', label: '进行中' },
+  { value: 'ENDED', label: '已结束' },
+  { value: 'SOLD_OUT', label: '已售罄' },
+  { value: 'CANCELLED', label: '已取消' },
+]
+
+const statusMeta: Record<ActivityStatus, { label: string; type: 'success' | 'warning' | 'info' | 'danger' }> = {
+  NOT_STARTED: { label: '未开始', type: 'info' },
+  RUNNING: { label: '进行中', type: 'success' },
+  ENDED: { label: '已结束', type: 'info' },
+  SOLD_OUT: { label: '已售罄', type: 'warning' },
+  CANCELLED: { label: '已取消', type: 'danger' },
 }
 
-function loadActivity(idText?: string): void {
-  const id = (idText ?? searchId.value).trim()
-  if (!id) {
-    ElMessage.warning('请输入活动 ID')
-    return
+function asActivity(row: unknown): ActivityItemVO {
+  return row as ActivityItemVO
+}
+
+function openOps(row?: ActivityItemVO): void {
+  drawerActivityId.value = row ? row.activityId : null
+  drawerOpen.value = true
+  if (row) {
+    void router.replace({ query: { ...route.query, id: String(row.activityId) } })
   }
-
-  loadingActivity.value = true
-  getActivity(id)
-    .then((data) => {
-      activity.value = data
-      searchId.value = String(data.activityId)
-      sessionStorage.setItem(LAST_ACTIVITY_KEY, String(data.activityId))
-      resolveProductName(data.productId)
-    })
-    .catch((error: unknown) => {
-      activity.value = null
-      ElMessage.error(error instanceof ApiError ? error.message : '活动查询失败')
-    })
-    .finally(() => {
-      loadingActivity.value = false
-    })
 }
 
-function startCreate(): void {
-  activity.value = null
-  productName.value = ''
-  searchId.value = ''
-  activeTab.value = 'config'
-  sessionStorage.removeItem(LAST_ACTIVITY_KEY)
+function onDrawerVisible(value: boolean): void {
+  drawerOpen.value = value
+  if (!value) {
+    const { id: _ignored, ...rest } = route.query
+    void router.replace({ query: rest })
+  }
+}
+
+function onSaved(activityId: number): void {
+  drawerActivityId.value = activityId
+  void router.replace({ query: { ...route.query, id: String(activityId) } })
+  refresh()
 }
 
 onMounted(() => {
-  const lastId = sessionStorage.getItem(LAST_ACTIVITY_KEY)
-  if (!lastId) return
-  searchId.value = lastId
-  loadActivity(lastId)
+  const routeId = Number(route.query.id)
+  const remembered = Number(sessionStorage.getItem('flash.admin.activityId'))
+  const initialId = Number.isFinite(routeId) && routeId > 0 ? routeId : remembered
+  if (Number.isFinite(initialId) && initialId > 0) {
+    drawerActivityId.value = initialId
+    drawerOpen.value = true
+  }
 })
-
-function onSubmit(payload: ActivityRequest): void {
-  saving.value = true
-
-  saveAdminActivity(payload)
-    .then((result) => {
-      ElMessage.success(payload.activityId ? '活动已更新' : '活动已创建，请先预热库存')
-      activeTab.value = 'ops'
-      loadActivity(String(result.activityId))
-    })
-    .catch((error: unknown) => {
-      ElMessage.error(error instanceof ApiError ? error.message : '活动保存失败')
-    })
-    .finally(() => {
-      saving.value = false
-    })
-}
-
-function confirmThen(kind: ActionKind, title: string, message: string, run: (id: number) => Promise<string>): void {
-  if (!activity.value) return
-
-  ElMessageBox.confirm(message, title, {
-    confirmButtonText: '确认执行',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      acting.value = kind
-      const id = activity.value?.activityId
-      if (!id) return
-      return run(id)
-        .then((successMessage) => {
-          ElMessage.success(successMessage)
-          loadActivity(String(id))
-        })
-        .catch((error: unknown) => {
-          ElMessage.error(error instanceof ApiError ? error.message : '操作失败')
-        })
-        .finally(() => {
-          acting.value = null
-        })
-    })
-    .catch(() => {
-      // 用户取消
-    })
-}
-
-function onPreheat(): void {
-  confirmThen(
-    'preheat',
-    '预热活动',
-    '预热会写入活动缓存与 Redis 库存，并更新 preheat_status。活动已预热时会被拒绝。',
-    (id) => preheatActivity(id).then((result) => `预热完成，Redis 库存 ${result.stock}`),
-  )
-}
-
-function onReset(): void {
-  confirmThen(
-    'reset',
-    '重置库存',
-    '重置会把 Redis 库存恢复为活动配置库存。活动处于进行中时间窗时会被后端拒绝，避免“复活”已扣库存。',
-    (id) => resetActivityStock(id).then((result) => `库存已重置为 ${result.stock}`),
-  )
-}
-
-function onSnapshot(): void {
-  confirmThen('snapshot', '抓取指标快照', '快照会写入订单库，用于后续对账与趋势分析。', (id) =>
-    captureSnapshot(id).then(() => '指标快照已写入订单库'),
-  )
-}
 </script>
 
 <template>
@@ -154,98 +85,155 @@ function onSnapshot(): void {
       <div>
         <h2 class="text-xl font-semibold">活动运维</h2>
         <p class="mt-1 text-sm text-ink-500">
-          管理端没有活动列表接口：按活动 ID 载入详情后编辑、预热、重置库存与查看指标。
+          按关键字与状态筛选活动，行内进入运维抽屉完成配置、预热、库存重置与指标查看。
         </p>
       </div>
-      <el-button type="primary" @click="startCreate">
+      <el-button type="primary" @click="openOps()">
         <Plus :size="15" class="mr-1.5" aria-hidden="true" />
         新建活动
       </el-button>
     </header>
 
     <section class="surface-card mt-5 p-4">
-      <form class="flex flex-wrap items-end gap-3" @submit.prevent="loadActivity()">
+      <form class="flex flex-wrap items-end gap-3" @submit.prevent="search">
         <div class="w-full sm:w-64">
-          <label for="admin-activity-id" class="mb-1 block text-xs text-ink-500">活动 ID</label>
-          <el-input id="admin-activity-id" v-model="searchId" placeholder="输入活动 ID 后载入" clearable>
+          <label for="admin-activity-keyword" class="mb-1 block text-xs text-ink-500">活动名称</label>
+          <el-input
+            id="admin-activity-keyword"
+            v-model="query.keyword"
+            placeholder="输入活动名称关键字"
+            clearable
+            @clear="search"
+          >
             <template #prefix>
               <Search :size="15" aria-hidden="true" />
             </template>
           </el-input>
         </div>
-        <el-button type="primary" native-type="submit" :loading="loadingActivity">载入活动</el-button>
-        <span v-if="activity" class="num ml-auto text-xs text-ink-500">
-          当前：{{ activity.activityName }}（#{{ activity.activityId }}）
-        </span>
+
+        <div class="w-full sm:w-40">
+          <label for="admin-activity-status" class="mb-1 block text-xs text-ink-500">状态</label>
+          <el-select id="admin-activity-status" v-model="query.status" class="w-full" @change="search">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </div>
+
+        <el-button type="primary" native-type="submit" :loading="loading">查询</el-button>
+        <el-button :disabled="loading" @click="reset">重置</el-button>
+        <el-button class="ml-auto" text :disabled="loading" @click="refresh">
+          <RefreshCw :size="14" class="mr-1" aria-hidden="true" />
+          刷新
+        </el-button>
       </form>
     </section>
 
-    <el-tabs v-model="activeTab" class="mt-5">
-      <el-tab-pane label="活动配置" name="config">
-        <div class="surface-card p-5">
-          <p v-if="activity" class="mb-4 rounded-lg bg-brand-soft px-3 py-2 text-xs text-brand-dark">
-            正在编辑活动 #{{ activity.activityId }}；修改时间窗或库存后，需要重新预热才会生效。
-          </p>
-          <ActivityForm
-            :key="formKey"
-            :initial="activity"
-            :product-name="productName"
-            :submitting="saving"
-            @submit="onSubmit"
-            @cancel="activity = null"
+    <section class="mt-5">
+      <div v-if="loading && !items.length" class="surface-card space-y-3 p-5">
+        <SkeletonBlock v-for="index in 5" :key="index" class="h-9" />
+      </div>
+
+      <EmptyState
+        v-else-if="error"
+        title="活动加载失败"
+        :description="error"
+        action-text="重新加载"
+        @action="refresh"
+      />
+
+      <template v-else>
+        <div class="surface-card overflow-hidden">
+          <el-table :data="items" row-key="activityId" class="w-full" table-layout="fixed">
+            <el-table-column label="ID" width="86">
+              <template #default="{ row }">
+                <span class="num text-xs text-ink-500">#{{ asActivity(row).activityId }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="活动 / 商品" min-width="200">
+              <template #default="{ row }">
+                <p class="truncate text-sm font-medium text-ink-900">{{ asActivity(row).activityName }}</p>
+                <p class="mt-0.5 truncate text-xs text-ink-500">
+                  {{ asActivity(row).productName || `商品 #${asActivity(row).productId}` }}
+                </p>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="时间窗" min-width="190">
+              <template #default="{ row }">
+                <p class="num text-xs text-ink-700">{{ asActivity(row).startTime }}</p>
+                <p class="num text-xs text-ink-500">至 {{ asActivity(row).endTime }}</p>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="秒杀价" width="110" align="right">
+              <template #default="{ row }">
+                <span class="num text-sm font-medium text-price">{{ formatPrice(asActivity(row).seckillPrice) }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="库存" width="100" align="right">
+              <template #default="{ row }">
+                <span class="num text-sm text-ink-900">{{ asActivity(row).stock ?? '—' }}</span>
+                <span class="num text-xs text-ink-500"> / {{ asActivity(row).totalStock }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="预热" width="88" align="center">
+              <template #default="{ row }">
+                <el-tag :type="asActivity(row).preheated ? 'success' : 'info'" size="small" effect="light">
+                  {{ asActivity(row).preheated ? '已预热' : '未预热' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="状态" width="92" align="center">
+              <template #default="{ row }">
+                <el-tag :type="statusMeta[asActivity(row).status].type" size="small" effect="light">
+                  {{ statusMeta[asActivity(row).status].label }}
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="操作" width="96" align="right">
+              <template #default="{ row }">
+                <el-button text type="primary" @click="openOps(asActivity(row))">
+                  <Settings2 :size="14" class="mr-1" aria-hidden="true" />
+                  运维
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <EmptyState
+            v-if="!items.length"
+            title="没有符合条件的活动"
+            description="调整关键字或状态后重试，也可以直接新建活动。"
+            action-text="新建活动"
+            @action="openOps()"
           />
         </div>
-      </el-tab-pane>
 
-      <el-tab-pane label="运维与指标" name="ops">
-        <EmptyState
-          v-if="!activity"
-          title="请先载入活动"
-          description="在上方输入活动 ID 并载入，或先创建活动。运维动作均以活动 ID 为唯一入参。"
-        />
-
-        <div v-else class="space-y-5">
-          <section class="surface-card p-5">
-            <h3 class="text-[15px] font-semibold">运维动作</h3>
-            <p class="mt-1 text-xs text-ink-500">
-              预热/重置库存由 activity 服务执行，库存写入经单体内部接口完成；执行前会二次确认。
-            </p>
-
-            <div class="mt-4 grid gap-3 sm:grid-cols-3">
-              <div class="rounded-lg border border-line/70 p-4">
-                <Flame :size="18" class="text-warning" aria-hidden="true" />
-                <p class="mt-2 text-sm font-medium">预热库存</p>
-                <p class="mt-1 text-xs leading-5 text-ink-500">写入活动缓存与 Redis 库存，必须成功后秒杀才可用。</p>
-                <el-button class="mt-3" type="primary" plain :loading="acting === 'preheat'" @click="onPreheat">
-                  执行预热
-                </el-button>
-              </div>
-
-              <div class="rounded-lg border border-line/70 p-4">
-                <RotateCcw :size="18" class="text-brand" aria-hidden="true" />
-                <p class="mt-2 text-sm font-medium">重置库存</p>
-                <p class="mt-1 text-xs leading-5 text-ink-500">按配置库存回填 Redis；进行中的活动会被拒绝。</p>
-                <el-button class="mt-3" plain :loading="acting === 'reset'" @click="onReset">重置库存</el-button>
-              </div>
-
-              <div class="rounded-lg border border-line/70 p-4">
-                <Camera :size="18" class="text-ink-500" aria-hidden="true" />
-                <p class="mt-2 text-sm font-medium">指标快照</p>
-                <p class="mt-1 text-xs leading-5 text-ink-500">把当前库存/订单/拒绝计数落库，供对账使用。</p>
-                <el-button class="mt-3" plain :loading="acting === 'snapshot'" @click="onSnapshot">
-                  抓取快照
-                </el-button>
-              </div>
-            </div>
-          </section>
-
-          <MetricsPanel :activity-id="activity.activityId" />
+        <div class="mt-4 flex justify-end">
+          <el-pagination
+            :current-page="page"
+            :page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            background
+            layout="total, sizes, prev, pager, next"
+            @current-change="setPage"
+            @size-change="setPageSize"
+          />
         </div>
-      </el-tab-pane>
+      </template>
+    </section>
 
-      <el-tab-pane label="死信重放" name="dead">
-        <DeadLetterPanel />
-      </el-tab-pane>
-    </el-tabs>
+    <ActivityOpsDrawer
+      :model-value="drawerOpen"
+      :activity-id="drawerActivityId"
+      @update:model-value="onDrawerVisible"
+      @saved="onSaved"
+      @changed="refresh"
+    />
   </div>
 </template>

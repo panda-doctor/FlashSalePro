@@ -76,3 +76,12 @@ export interface ResetStockResult {
   stockKey: string
   stock: number
 }
+
+/** GET /api/admin/seckill/activities 的查询参数 */
+export interface AdminActivityQuery {
+  page: number
+  pageSize: number
+  keyword?: string
+  /** ALL 或空表示不过滤 */
+  status?: ActivityStatus | 'ALL'
+}

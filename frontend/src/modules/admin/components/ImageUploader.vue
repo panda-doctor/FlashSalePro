@@ -9,9 +9,17 @@ import { ApiError } from '@/shared/types/common'
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
-const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp']
-/** product 服务未配置 spring.servlet.multipart，Boot 默认 1MB；异常提示里的 6MB 与实际不符 */
-const MAX_SIZE = 1024 * 1024
+/** 与后端 AbstractImageStorage.ALLOWED_EXT 对齐（按扩展名校验） */
+const ALLOWED_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jfif',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+]
+/** product 服务 multipart 已配置为 5MB，与业务层 MAX_IMAGE_SIZE 保持一致 */
+const MAX_SIZE = 5 * 1024 * 1024
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
@@ -28,11 +36,11 @@ function onFileChange(event: Event): void {
   if (!file) return
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    ElMessage.error('仅支持 PNG / JPEG / WebP')
+    ElMessage.error('仅支持 PNG / JPEG / GIF / WebP / BMP')
     return
   }
   if (file.size > MAX_SIZE) {
-    ElMessage.error('图片不能超过 1MB：后端 product 服务使用 Boot 默认 multipart 限制')
+    ElMessage.error('图片不能超过 5MB')
     return
   }
 
@@ -72,7 +80,7 @@ function onFileChange(event: Event): void {
         <input
           ref="fileInput"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept=".png,.jpg,.jpeg,.jfif,.gif,.webp,.bmp,image/png,image/jpeg,image/gif,image/webp,image/bmp"
           class="hidden"
           @change="onFileChange"
         />
@@ -86,7 +94,7 @@ function onFileChange(event: Event): void {
         />
 
         <p class="mt-1 text-xs leading-5 text-ink-500">
-          支持 PNG / JPEG / WebP，单张 ≤1MB；超出会被服务端以 413 拒绝。
+          支持 PNG / JPEG / GIF / WebP / BMP，单张 ≤5MB；超出会被服务端以 413 拒绝。
         </p>
       </div>
     </div>

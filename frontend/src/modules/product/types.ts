@@ -40,3 +40,12 @@ export interface ProductQuery {
 export interface ProductCreatedResult {
   productId: string
 }
+
+/** GET /api/admin/products 的查询参数 */
+export interface AdminProductQuery {
+  page: number
+  pageSize: number
+  keyword?: string
+  /** ALL 或空表示不过滤 */
+  status?: ProductStatus | 'ALL'
+}

@@ -1,6 +1,11 @@
 import { http } from '@/shared/api/client'
+import type { PageResponse } from '@/shared/types/common'
 import type {
+  AdminOrderQuery,
+  AdminOrderVO,
   DeadLetterBatchReplayResult,
+  DeadLetterItemVO,
+  DeadLetterQuery,
   DeadLetterReplayRequest,
   DeadLetterReplayResult,
   OrderDetail,
@@ -16,6 +21,46 @@ export function getOrderDetail(orderNo: string): Promise<OrderDetail> {
 export function listMyOrders(activityId?: number): Promise<OrderListItemVO[]> {
   return http.get<OrderListItemVO[]>('/api/seckill/users/me/orders', {
     params: activityId ? { activityId } : undefined,
+  })
+}
+
+/** 管理端订单分页 */
+export function pageAdminOrders(
+  query: AdminOrderQuery,
+  signal?: AbortSignal,
+): Promise<PageResponse<AdminOrderVO>> {
+  return http.get<PageResponse<AdminOrderVO>>('/api/admin/orders', {
+    params: {
+      page: query.page,
+      pageSize: query.pageSize,
+      orderNo: query.orderNo || undefined,
+      activityId: query.activityId || undefined,
+      userId: query.userId || undefined,
+      status: query.status && query.status !== 'ALL' ? query.status : undefined,
+    },
+    admin: true,
+    signal,
+  })
+}
+
+export function getAdminOrder(orderNo: string): Promise<AdminOrderVO> {
+  return http.get<AdminOrderVO>(`/api/admin/orders/${encodeURIComponent(orderNo)}`, { admin: true })
+}
+
+/** 管理端死信分页（只读日志，重放仍走 replay / replay-batch） */
+export function pageAdminDeadLetters(
+  query: DeadLetterQuery,
+  signal?: AbortSignal,
+): Promise<PageResponse<DeadLetterItemVO>> {
+  return http.get<PageResponse<DeadLetterItemVO>>('/api/admin/seckill/dead-letters', {
+    params: {
+      page: query.page,
+      pageSize: query.pageSize,
+      keyword: query.keyword || undefined,
+      activityId: query.activityId || undefined,
+    },
+    admin: true,
+    signal,
   })
 }
 

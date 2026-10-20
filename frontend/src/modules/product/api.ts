@@ -1,6 +1,11 @@
 import { http } from '@/shared/api/client'
 import type { PageResponse } from '@/shared/types/common'
-import type { ProductCreatedResult, ProductRequest, ProductVO } from '@/modules/product/types'
+import type {
+  AdminProductQuery,
+  ProductCreatedResult,
+  ProductRequest,
+  ProductVO,
+} from '@/modules/product/types'
 
 export interface ProductListParams {
   page: number
@@ -25,6 +30,23 @@ export function listProducts(
 
 export function getProduct(productId: number | string): Promise<ProductVO> {
   return http.get<ProductVO>(`/api/products/${productId}`)
+}
+
+/** 管理端商品分页（含已下架） */
+export function pageAdminProducts(
+  params: AdminProductQuery,
+  signal?: AbortSignal,
+): Promise<PageResponse<ProductVO>> {
+  return http.get<PageResponse<ProductVO>>('/api/admin/products', {
+    params: {
+      page: params.page,
+      pageSize: params.pageSize,
+      keyword: params.keyword || undefined,
+      status: params.status && params.status !== 'ALL' ? params.status : undefined,
+    },
+    admin: true,
+    signal,
+  })
 }
 
 /** 管理端商品：需 X-Admin-Token（M5 使用） */

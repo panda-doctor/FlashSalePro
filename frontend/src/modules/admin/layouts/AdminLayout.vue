@@ -2,7 +2,17 @@
 import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
-import { LayoutDashboard, LogOut, Package, Store, Users, Zap } from 'lucide-vue-next'
+import {
+  AlertTriangle,
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Receipt,
+  Store,
+  Users,
+  Zap,
+} from 'lucide-vue-next'
 import AdminTokenGate from '@/modules/admin/components/AdminTokenGate.vue'
 import { useAdminTokenStore } from '@/modules/admin/store/adminToken'
 
@@ -13,8 +23,11 @@ const adminToken = useAdminTokenStore()
 const sidebarOpen = ref(false)
 
 const items = [
-  { name: 'admin-products', label: '商品管理', icon: Package },
+  { name: 'admin-dashboard', label: '经营看板', icon: BarChart3 },
   { name: 'admin-activities', label: '活动运维', icon: Zap },
+  { name: 'admin-products', label: '商品管理', icon: Package },
+  { name: 'admin-orders', label: '订单管理', icon: Receipt },
+  { name: 'admin-dead-letters', label: '死信管理', icon: AlertTriangle },
   { name: 'admin-users', label: '用户管理', icon: Users },
 ]
 

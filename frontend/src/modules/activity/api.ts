@@ -1,8 +1,10 @@
 import { http } from '@/shared/api/client'
+import type { PageResponse } from '@/shared/types/common'
 import type {
   ActivityItemVO,
   ActivityRequest,
   ActivitySaveResult,
+  AdminActivityQuery,
   PreheatResult,
   ResetStockResult,
   SeckillActivityVO,
@@ -15,6 +17,23 @@ export function listActivities(): Promise<ActivityItemVO[]> {
 
 export function getActivity(activityId: number | string): Promise<SeckillActivityVO> {
   return http.get<SeckillActivityVO>(`/api/seckill/activities/${activityId}`)
+}
+
+/** 管理端活动分页（含全部状态，关键字 + 状态过滤） */
+export function pageAdminActivities(
+  params: AdminActivityQuery,
+  signal?: AbortSignal,
+): Promise<PageResponse<ActivityItemVO>> {
+  return http.get<PageResponse<ActivityItemVO>>('/api/admin/seckill/activities', {
+    params: {
+      page: params.page,
+      pageSize: params.pageSize,
+      keyword: params.keyword || undefined,
+      status: params.status && params.status !== 'ALL' ? params.status : undefined,
+    },
+    admin: true,
+    signal,
+  })
 }
 
 /** 管理端：创建/更新活动（需 X-Admin-Token） */

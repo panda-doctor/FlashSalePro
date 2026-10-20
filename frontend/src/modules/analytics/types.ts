@@ -19,3 +19,31 @@ export interface ActivityMetricsVO {
   rateLimitRejectCount: number
   soldOutRejectCount: number
 }
+
+/** GET /api/admin/analytics/overview */
+export interface AdminOverviewVO {
+  summary: {
+    orderCount: number
+    /** 成交额，单位：分 */
+    gmv: number
+    userCount: number
+    todayOrderCount: number
+    todayGmv: number
+    deadLetterCount: number
+  }
+  trend: Array<{ date: string; orderCount: number; gmv: number }>
+  topActivities: Array<{ activityId: number; orderCount: number; gmv: number }>
+}
+
+/** GET /api/admin/analytics/activities/{id}/snapshots */
+export interface SnapshotPointVO {
+  activityId: number
+  redisStock: number | null
+  orderCount: number | null
+  queuedMessageCount: number | null
+  successCount: number | null
+  duplicateRejectCount: number | null
+  rateLimitRejectCount: number | null
+  soldOutRejectCount: number | null
+  snapshotTime: string
+}
