@@ -2030,9 +2030,10 @@ required a bean of type 'javax.sql.DataSource' that could not be found.
 | 项 | 结论 |
 |---|---|
 | 前端 E2E | 6 spec / 11 用例全绿（提交 `8590287`）；`lint` / `type-check` / 49 单测 / `build` 均通过 |
+| 管理端完善（M9） | **2026-10-20 完成**：活动/商品/订单/死信分页 + 经营看板 + 上传 5MB；后端 **161 用例 0 失败**，网关冒烟 5 个新端点全 200，前端 11 E2E 全绿 |
 | 下一里程碑 | **P7 发布工程化（M8 可发布交付）**：Dockerfile（8 服务 + 网关）→ 全栈 Compose → 托管 CI（复用 `ci-verify.ps1` 口径）+ Testcontainers（P2-1） |
-| 文档卫生 | 本文件路线图/阶段表已同步 P5/P6 完成；`frontend/README.md` 与 `FRONTEND_AGENT_PROGRESS.md` 已补 E2E 说明 |
-| 可选增强（不阻塞） | 真实积压演练、OTel/Zipkin、后端 multipart 上限→前端 5MB、E6 图片样本复现 |
+| 文档卫生 | 本文件路线图/阶段表已同步 P5/P6 完成；`docs/interface.md` 与 `frontend/FRONTEND_MODULE_MAP.md` 已补 M9 契约 |
+| 可选增强（不阻塞） | 真实积压演练、OTel/Zipkin、E6 图片样本复现 |
 
 ---
 

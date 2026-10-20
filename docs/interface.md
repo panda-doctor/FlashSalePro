@@ -109,6 +109,9 @@ http://localhost:8081
 > | --- | --- | --- |
 > | `flash-sale-auth` | 8082 | `/api/auth/**`、`/api/admin/users/**` |
 > | `flash-sale-ai` | 8083 | `/api/support/**` |
+> | `flash-sale-product` | 8084 | `/api/products/**`、`/api/admin/products/**`、`/api/admin/files/**` |
+> | `flash-sale-activity` | 8085 | `/api/seckill/activities/**`、`/api/admin/seckill/activities/**` |
+> | `flash-sale-order` | 8087 | `/api/seckill/orders/**`、`/api/admin/orders/**`、`/api/admin/seckill/dead-letters/**`、`/api/admin/analytics/**` |
 > | `flash-sale-monolith` | 8081 | 其余 `/api/**`（自持鉴权；P3~P5 继续按域拆出） |
 >
 > 即：下方清单中的路径对调用方不变，变化只在网关背后的服务归属（P2 Day 2 拆 auth、Day 3 拆 ai）。
@@ -118,8 +121,10 @@ http://localhost:8081
 | 健康检查 | `GET` | `/api/health` | 检查服务状态 |
 | 商品 | `GET` | `/api/products/{productId}` | 查询商品详情，使用缓存旁路 |
 | 商城商品 | `GET` | `/api/products?page=1&pageSize=20&keyword=` | 分页搜索仅上架商品 |
+| 管理端商品列表 | `GET` | `/api/admin/products?page=&pageSize=&keyword=&status=` | 全量商品分页（含下架），需管理令牌 |
 | 管理端商品详情 | `GET` | `/api/admin/products/{productId}` | 按编号载入商品（包括下架商品，需管理令牌） |
 | 管理端商品 | `POST` | `/api/admin/products` | 创建或更新商品 |
+| 管理端活动列表 | `GET` | `/api/admin/seckill/activities?page=&pageSize=&keyword=&status=` | 活动分页（关键字 + 状态快照），需管理令牌 |
 | 管理端活动 | `POST` | `/api/admin/seckill/activities` | 创建秒杀活动 |
 | 管理端预热 | `POST` | `/api/admin/seckill/activities/{activityId}/preheat` | 预热活动和库存到缓存 |
 | 管理端库存重置 | `POST` | `/api/admin/seckill/activities/{activityId}/reset-stock` | 重置活动库存（仅未开始/已结束，运维/压测复位） |
@@ -133,8 +138,13 @@ http://localhost:8081
 | 排行榜 | `GET` | `/api/rank/top10` | 查询秒杀成功排行榜 |
 | 管理端指标 | `GET` | `/api/admin/seckill/activities/{activityId}/metrics` | 查询活动运行指标 |
 | 管理端快照 | `POST` | `/api/admin/seckill/activities/{activityId}/snapshot` | 手动打点活动指标快照（压测/复盘用） |
+| 死信列表 | `GET` | `/api/admin/seckill/dead-letters?page=&pageSize=&keyword=&activityId=` | 死信分页（message_log.status=3），需管理令牌 |
 | 死信回放 | `POST` | `/api/admin/seckill/dead-letters/replay` | 人工回放死信消息（需管理令牌） |
-| 图片上传 | `POST` | `/api/admin/files/image` | 上传商品图片（multipart，本地磁盘 / OSS 双策略） |
+| 管理端订单列表 | `GET` | `/api/admin/orders?page=&pageSize=&orderNo=&activityId=&userId=&status=` | 订单分页（管理端视角），需管理令牌 |
+| 管理端订单详情 | `GET` | `/api/admin/orders/{orderNo}` | 订单详情，需管理令牌 |
+| 经营看板 | `GET` | `/api/admin/analytics/overview?days=7` | 订单/成交汇总、按天趋势、活动 Top5 |
+| 快照趋势 | `GET` | `/api/admin/analytics/activities/{activityId}/snapshots?limit=20` | 单活动最近 N 次快照 |
+| 图片上传 | `POST` | `/api/admin/files/image` | 上传商品图片（multipart，本地磁盘 / OSS 双策略，≤5MB） |
 | AI 客服 | `POST` | `/api/support/chat` | AI 客服对话（接入外部 OpenAI 兼容大模型） |
 | 用户账户 | `POST` | `/api/auth/register` | 账号名、密码和可选昵称注册并创建会话 |
 | 用户账户 | `POST` | `/api/auth/login` | 账号密码登录并创建会话 |
@@ -692,6 +702,27 @@ POST /api/admin/seckill/activities/{activityId}/reset-stock
 | `DELETE` | `/api/admin/users/{userId}` | 软删除用户 |
 
 以上接口使用现有 `X-Admin-Token`。`status` 仅支持 `0`（禁用）和 `1`（正常），`pageSize` 最大 100。禁用、重置密码及软删除都会撤销用户的全部会话。删除不会清除用户记录或订单。
+
+### 4.17 管理端列表与经营看板（2026-10-20）
+
+新增查询均为 `GET`，统一校验 `X-Admin-Token`，分页返回 `records/page/pageSize/total/pages`，`pageSize` 上限 100。
+
+| 方法 | 路径 | 参数 | 说明 |
+| --- | --- | --- | --- |
+| `GET` | `/api/admin/seckill/activities` | page, pageSize, keyword, status | status 取枚举名或 `ALL`；关键字匹配活动名；商品信息一次批量补全 |
+| `GET` | `/api/admin/products` | page, pageSize, keyword, status | 不限制在售状态，status 取 `ON_SHELF` / `OFF_SHELF` |
+| `GET` | `/api/admin/orders` | page, pageSize, orderNo, activityId, userId, status | orderNo 精确匹配，其余可组合 |
+| `GET` | `/api/admin/orders/{orderNo}` | — | 订单不存在返回 `NOT_FOUND` |
+| `GET` | `/api/admin/seckill/dead-letters` | page, pageSize, keyword, activityId | 只读 `seckill_message_log.status=3`；重放仍走 replay 接口 |
+| `GET` | `/api/admin/analytics/overview` | days（默认 7，1~30） | summary / trend / topActivities，空缺日期补 0 |
+| `GET` | `/api/admin/analytics/activities/{id}/snapshots` | limit（默认 20，1~100） | 按 snapshot_time 倒序 |
+
+说明：
+
+- 活动/商品分页与既有 `POST` 同路径不同方法，网关无需新增 activity 路由；商品与订单路径已补精确导流。
+- 死信列表只用于定位与勾选，重放必须使用原 `stream message id`，由 order 服务从死信流读取完整消息体，不能凭日志重建。
+- 看板聚合只在 order 库内完成（订单 + 消息日志 + 快照），不跨服务调用；活动名称由前端用活动列表映射。
+- 图片上传：product 服务 `spring.servlet.multipart` 已配置 5MB/10MB，业务层与前端提示同为 5MB。
 
 ## 五、核心链路约定
 

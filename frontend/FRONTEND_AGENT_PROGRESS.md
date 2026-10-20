@@ -366,3 +366,14 @@ pnpm build        exit 0
 | 结果 | **11 passed**；同时 `lint` / `type-check` / 49 单测 / `build` 全绿（提交 `8590287`） |
 | 选择器约定 | 优先 `getByRole`；Element Plus 的 radio 原生输入被隐藏，点击外层 `label`；同名 h1/h2 用 `level` 区分；`订单号` 这类多处出现的文本加 `exact: true` |
 | 环境依赖 | 网关 8090 + 各域服务；秒杀用例需 order 消费者在线（`FLASH_STREAM_AUTO_POLL=true`） |
+
+## 17. 管理台列表化与经营看板（M9，2026-10-20）
+
+| 项 | 内容 |
+|---|---|
+| 新增页面 | `admin-dashboard`（KPI/趋势/Top5/快照）、`admin-orders`（四条件 + 详情抽屉）、`admin-dead-letters`（多选批量重放） |
+| 列表化 | 活动运维改为「筛选 + 表格 + 运维抽屉」；商品管理改为全量列表（含下架）+ 上下架 |
+| 后端接口 | 活动/商品/订单/死信分页、订单详情、看板聚合、快照趋势（均走 `X-Admin-Token`） |
+| 上传 | product 配置 `max-file-size=5MB`、`max-request-size=10MB`；前端同步 5MB 与扩展名白名单 |
+| 路由 | `/admin` 默认重定向经营看板；侧栏顺序：看板、活动、商品、订单、死信、用户 |
+| 验证 | 后端 161 用例 0 失败；前端 lint / type-check / 49 单测 / build / 11 E2E 全绿；网关新端点 5/5 返回 200 |

@@ -33,6 +33,7 @@
 | M6 | 管理端-活动运维 | activity(:8085)/order(:8087)/analytics | `AdminSeckillController`/`AdminMessageController`/`AdminMetricsCaptureController`/`AdminMetricsController` | `admin-activities` | 管理令牌 | 已完成 |
 | M7 | 管理端-用户 | auth(:8082) | `AdminUserController` | `admin-users` | 管理令牌 | 已完成 |
 | M8 | AI 客服 + 全量验收 | ai(:8083) | `AiSupportController` | `ai-support` | 公开 | 已完成 |
+| M9 | 管理端-列表与看板 | activity(:8085)/product(:8084)/order(:8087) | `AdminSeckillController`/`AdminProductController`/`AdminOrderController`/`AdminAnalyticsController`/`AdminMessageController` | `admin-dashboard`/`admin-orders`/`admin-dead-letters` | 管理令牌 | 已完成（2026-10-20） |
 
 > 说明：`POST /api/seckill/execute` 随 M3 的活动详情一起落地（保证详情页 CTA 闭环），M4 负责订单状态轮询与订单页。
 
@@ -59,6 +60,7 @@
 |---|---|---|---|---|
 | GET | `/api/products` | `page≥1`、`pageSize 1-100`、`keyword?` | `PageResponse<ProductVO>`（仅 ON_SHELF） | `api/product.ts`、`ProductListView` |
 | GET | `/api/products/{productId}` | path | `ProductVO` | `ProductDetailView` |
+| GET | `/api/admin/products` | page/pageSize/keyword/status | `PageResponse<ProductVO>`（含下架） | M9 |
 | GET | `/api/admin/products/{productId}` | path | `ProductVO` | M5 |
 | POST | `/api/admin/products` | `ProductRequest` | `{productId: string}` | M5 |
 | POST | `/api/admin/files/image` | multipart 字段 `file` | `{url, storageType}` | M5 |
@@ -93,18 +95,24 @@
 |---|---|---|---|
 | POST | `/api/admin/products` | `ProductRequest{productId?,name,description?,imageUrl?,originalPrice≥0,totalStock≥1,status}` | `{productId: string}` |
 | POST | `/api/admin/files/image` | multipart `file` | `{url, storageType}` |
+| GET | `/api/admin/seckill/activities` | page/pageSize/keyword/status | `PageResponse<ActivityItemVO>` | M9 |
 | POST | `/api/admin/seckill/activities` | `ActivityRequest{activityId?,productId,activityName,startTime,endTime,seckillPrice,seckillStock,limitPerUser=1}` | `{activityId,status}` |
 | POST | `/api/admin/seckill/activities/{id}/preheat` | — | `{activityId,activityKey,stockKey,stock}` |
 | POST | `/api/admin/seckill/activities/{id}/reset-stock` | — | `{activityId,stockKey,stock}` |
 | GET | `/api/admin/seckill/activities/{id}/metrics` | — | `ActivityMetricsVO` |
 | POST | `/api/admin/seckill/activities/{id}/snapshot` | — | 无 data |
+| GET | `/api/admin/seckill/dead-letters` | page/pageSize/keyword/activityId | `PageResponse<DeadLetterItemVO>` | M9 |
 | POST | `/api/admin/seckill/dead-letters/replay` | `{originalMessageId}` | `{originalMessageId,replayMessageId}` |
 | POST | `/api/admin/seckill/dead-letters/replay-batch` | `{originalMessageIds: string[]}` | `{attempted,succeeded,failed,failures[]}` |
+| GET | `/api/admin/orders` | page/pageSize/orderNo/activityId/userId/status | `PageResponse<AdminOrderVO>` | M9 |
+| GET | `/api/admin/orders/{orderNo}` | path | `AdminOrderVO` | M9 |
+| GET | `/api/admin/analytics/overview` | days(1~30) | `AdminOverviewVO` | M9 |
+| GET | `/api/admin/analytics/activities/{id}/snapshots` | limit(1~100) | `SnapshotPointVO[]` | M9 |
 | GET | `/api/admin/users` | `page,pageSize,keyword,status(0|1)` | `PageResponse<UserProfileResponse>` |
 | GET/PUT/DELETE | `/api/admin/users/{userId}` | PUT 全可选 `{displayName?,status?,password?}` | `UserProfileResponse` / 无 |
 | POST | `/api/admin/users` | `{accountName,password(10-72),displayName?}` | `UserProfileResponse` |
 
-管理端**没有**活动列表/详情接口，只能按 `activityId` 查询用户端详情。
+管理端已有活动/商品/订单/死信列表与经营看板；活动详情仍复用用户端 `GET /api/seckill/activities/{activityId}`（无 `preheated` 字段，列表接口才有）。
 
 ### 3.6 AI（M8）
 
@@ -128,9 +136,12 @@
 | `activity-detail` | `/activities/:id` | MainLayout | — | 活动详情（M3/M4） |
 | `orders` | `/orders` | MainLayout | requiresAuth | 我的订单（M4） |
 | `ai-support` | `/ai-support` | MainLayout | — | AI 客服（M8） |
-| `admin` | `/admin` | AdminLayout | requiresAdmin | 管理台父路由（M5） |
-| `admin-products` | `/admin/products` | AdminLayout | requiresAdmin | M5 |
-| `admin-activities` | `/admin/activities` | AdminLayout | requiresAdmin | M6 |
+| `admin` | `/admin` | AdminLayout | requiresAdmin | 管理台父路由，默认重定向经营看板（M9） |
+| `admin-dashboard` | `/admin/dashboard` | AdminLayout | requiresAdmin | M9 |
+| `admin-products` | `/admin/products` | AdminLayout | requiresAdmin | M5（M9 列表化） |
+| `admin-activities` | `/admin/activities` | AdminLayout | requiresAdmin | M6（M9 列表化） |
+| `admin-orders` | `/admin/orders` | AdminLayout | requiresAdmin | M9 |
+| `admin-dead-letters` | `/admin/dead-letters` | AdminLayout | requiresAdmin | M9 |
 | `admin-users` | `/admin/users` | AdminLayout | requiresAdmin | M7 |
 
 导航显隐由 `router.hasRoute(name)` 自动控制，模块未接入时不会出现死链。
@@ -166,8 +177,8 @@
 
 1. **活动 status 不自动流转** → 所有阶段展示用 `resolveActivityPhase()`，status 仅兜底。
 2. **活动列表是裸数组**，不可套用分页组件。
-3. **管理端无活动列表** → 运维页按 ID 查询，创建后用返回的 activityId 自动回填。
-4. **上传真实上限 1MB**（product 未配 `spring.servlet.multipart`，异常文案却写 6MB）→ 前端限 1MB，并提示限制来源。
+3. **管理端列表已补** → 活动/商品/订单/死信均分页；活动详情仍复用用户端接口，`preheated` 只在列表 VO 中。
+4. **上传上限 5MB**（product `spring.servlet.multipart` 5MB/10MB 与业务层一致）→ 前端限 5MB，类型对齐扩展名白名单。
 5. **`data` 键可能缺失**（logout/snapshot）→ 相关 API 返回 `void`，不读取 `.data`。
 6. **DTO 内 null 字段会显式出现**（如 `orderNo: null`）→ 类型用 `string | null`。
 7. 除商品创建返回 string 外，其余 ID 为 number；当前雪花 ID < 2^53。
@@ -189,7 +200,7 @@
 | `src/modules/order/` | order :8087 | `api.ts`（含死信重放）、`types.ts`、`views/OrdersView.vue`、`components/`、`composables/useOrderPolling.ts`、`utils/orderStatus.ts` |
 | `src/modules/analytics/` | analytics（bootstrap :8081） | `api.ts`（`/api/rank/top10` + 管理端指标）、`types.ts`、`components/`（RankList、MetricsPanel）、`composables/useRank.ts` |
 | `src/modules/ai/` | ai :8083 | `api.ts`、`views/AiSupportView.vue`、`components/ChatPanel.vue` |
-| `src/modules/admin/` | 横切（管理令牌） | `store/adminToken.ts`、`layouts/AdminLayout.vue`、`views/`（商品/活动/用户）、`components/`（TokenGate、ImageUploader、ActivityForm、ProductForm、UserForm、DeadLetterPanel） |
+| `src/modules/admin/` | 横切（管理令牌） | `store/adminToken.ts`、`layouts/AdminLayout.vue`、`views/`（看板/活动/商品/订单/死信/用户）、`components/`（TokenGate、ImageUploader、ActivityForm、ActivityOpsDrawer、ProductForm、UserForm、DeadLetterPanel） |
 
 约定：
 - 管理端**接口契约归属业务域**（如 `saveAdminActivity` 在 `modules/activity/api.ts`），`modules/admin` 只放视图与令牌闸门。
