@@ -38,10 +38,12 @@
 ✅ 第 3 阶段：高并发防护体系（Day 1 ~ Day 5 全部完成，40 用例 BUILD SUCCESS）
 ✅ 第 4 阶段：排行榜、前端与全链路压测（Day 1 ~ Day 5 完成，另含增强①图片存储、增强② AI 客服，59 用例）
 ✅ 第 4 阶段收尾：全量代码审计整改（R1~R5 / C1~C6 / E1~E6）+ E 卡收尾 + F/G 多账号 + S2/M 交付前收尾 + Day 6 复盘学习收口（《Redis 实战总结》/ notework 笔记；HEAD `c035ca8`，92 用例 BUILD SUCCESS）—— 4 个阶段全部完成
-🔄 第 5 阶段：微服务架构演进（P0 ~ P6，进行中，方案与任务卡见 `docs/microservices-plan.md`）
+✅ 第 5 阶段：微服务架构演进（P0 ~ P6 全部完成，P7 发布工程化待开工，方案见 `docs/microservices-plan.md`）
   ✅ P0 边界治理（M1，2026-10-13）  ✅ P1 基础设施（P1-1 + P1-2 T1~T5 全收口）  ✅ P2 边缘抽取（auth / ai / 网关统一鉴权，`p2-done`）
   ✅ P3 商品与活动（独立库 + 应用 :8083/:8084/:8085 + 网关精确导流）  ✅ P4 核心交易链路（seckill/order 服务化 + 四权威库 + **旧库 `flash_sale` 已 DROP**）
-  📋 P5 读模型收口（analytics 事件驱动，CQRS 完成）← **下一里程碑 M6**  ⏳ P6 质量与运维
+  ✅ P5 读模型收口（analytics 事件驱动，CQRS 完成，`tag p5-done`，对账 20/20 零差异；M6 达成）
+  ✅ P6 质量与运维（`scripts/ci-verify.ps1` 门禁 GREEN / 投影健康探针 / Runbook / 2 类混沌演练；M7 达成）
+  📋 P7 发布工程化（Dockerfile / 全栈 Compose / 托管 CI / Testcontainers）← **下一里程碑**
 ```
 
 ---
@@ -814,23 +816,24 @@
 
 ---
 
-## 八、第 5 阶段：微服务架构演进（P0~P4 已完成 · P5 规划中）
+## 八、第 5 阶段：微服务架构演进（P0~P6 已完成 · P7 发布工程化待开工）
 
 > 方案与 P0 详细任务卡：**`docs/microservices-plan.md`**（2026-10-12 落档：迁移策略 / 服务划分 / 技术选型 / 阶段规划 / 质量运维 / 风险 / 时间线 + P0 逐日步骤）。
 >
 > 本阶段定位：在单体（4 阶段全部完成、92 用例基线）之上做「模块化单体 → 绞杀者式微服务抽取」的渐进演进；坚持**可停可回退**，任意阶段停下都是完整可演示系统。
 
-**阶段路线（P0 ~ P6）：**
+**阶段路线（P0 ~ P7）：**
 
 | 阶段 | 主题 | 预估 | 里程碑 | 状态 |
 |---|---|---|---|---|
 | P0 | 边界治理（Maven 12 模块 + 包边界 + ArchUnit 规则） | 4 天 | M1 模块化单体 | ✅ 完成（2026-10-13） |
-| P1 | 基础设施（Nacos / Gateway / Compose / 追踪 / 监控） | 3 天 | M2 基建就绪 | 🔄 P1-1 ✅ / P1-2 进行中（T1 ✅） |
-| P2 | 边缘抽取（auth-service / ai-service / 网关统一鉴权） | 4 天 | M3 首个服务上线 | ⏳ |
-| P3 | 商品与活动（product / activity 独立库与缓存所有权） | 5 天 | M4 主数据域独立 | ⏳ |
-| P4 | 核心交易（seckill / order / `order.created` 事件 / 数据迁移） | 6 天 | M5 跨服务交易闭环 | ✅（**Day 1 切读 / Day 2 seckill / Day 3 order / Day 4 order 库拆分 / Day 5 ai 摘出旧库 + 测试隔离 / Day 6 auth 库拆分 + 清理归属收口 / Day 7 会话校验跨服务化 / Day 8 analytics 订单读路径跨服务化 / Day 9 Redis 隔离 / Day 10 收官（旧库 `flash_sale` 已 DROP）**（2026-10-16~17）；检查表清零；剩余仅"删镜像死代码"一项卫生工作） |
-| P5 | 读模型收口（analytics 事件驱动，CQRS 完成） | 3 天 | M6 读模型分离 | ⏳ |
-| P6 | 质量运维（CI/CD / 告警 / 混沌演练 / Runbook） | 4 天 | M7 可运维交付 | ⏳ |
+| P1 | 基础设施（Nacos / Gateway / Compose / 追踪 / 监控） | 3 天 | M2 基建就绪 | ✅ 完成（P1-1 + P1-2 T1~T5 全收口） |
+| P2 | 边缘抽取（auth-service / ai-service / 网关统一鉴权） | 4 天 | M3 首个服务上线 | ✅ 完成（`tag p2-done`） |
+| P3 | 商品与活动（product / activity 独立库与缓存所有权） | 5 天 | M4 主数据域独立 | ✅ 完成（独立库 + :8083/:8084/:8085 + 网关精确导流） |
+| P4 | 核心交易（seckill / order / `order.created` 事件 / 数据迁移） | 6 天 | M5 跨服务交易闭环 | ✅（**Day 1 切读 / Day 2 seckill / Day 3 order / Day 4 order 库拆分 / Day 5 ai 摘出旧库 + 测试隔离 / Day 6 auth 库拆分 + 清理归属收口 / Day 7 会话校验跨服务化 / Day 8 analytics 订单读路径跨服务化 / Day 9 Redis 隔离 / Day 10 收官（旧库 `flash_sale` 已 DROP）**（2026-10-16~17）；检查表清零） |
+| P5 | 读模型收口（analytics 事件驱动，CQRS 完成） | 3 天 | M6 读模型分离 | ✅ 完成（`tag p5-done`；回填 4028 单、对账 20/20 零差异、默认切 `projection`、读端点零跨服务调用） |
+| P6 | 质量运维（CI/CD / 告警 / 混沌演练 / Runbook） | 4 天 | M7 可运维交付 | ✅ 完成（门禁 `RESULT: GREEN`、投影健康探针、Runbook、会话守卫/消费者重启演练；真实积压演练列为增强） |
+| P7 | 发布工程化（Dockerfile / 全栈 Compose / 托管 CI / Testcontainers） | 3 天 | M8 可发布交付 | 📋 待开工（承接审计 P2-1 / P3-2 / P3-3） |
 
 **规模口径**：8 服务 + 1 网关（gateway / auth / product / activity / seckill / order / analytics / ai）封顶；同步用 OpenFeign、异步复用 Redis Stream（进阶可换 Kafka）；注册与配置用 Nacos，网关用 Spring Cloud Gateway，限流熔断用 Sentinel。
 
@@ -2021,6 +2024,15 @@ required a bean of type 'javax.sql.DataSource' that could not be found.
 | 演练 3（真实积压） | **未做**（需临时改活动/库存 + 压测流量，对演示数据有污染风险）；判据已写入 Runbook：`XLEN` 归零 + `queuedMessageCount` 回落 + 对账 0 差异 |
 
 **P6 结论**：质量门禁、漂移可观测、故障处置手册、两类混沌演练齐备；剩余（真实积压演练、OTel/Zipkin、托管 CI）均属增强项，不构成缺口。
+
+### 下一步（2026-10-20 更新）
+
+| 项 | 结论 |
+|---|---|
+| 前端 E2E | 6 spec / 11 用例全绿（提交 `8590287`）；`lint` / `type-check` / 49 单测 / `build` 均通过 |
+| 下一里程碑 | **P7 发布工程化（M8 可发布交付）**：Dockerfile（8 服务 + 网关）→ 全栈 Compose → 托管 CI（复用 `ci-verify.ps1` 口径）+ Testcontainers（P2-1） |
+| 文档卫生 | 本文件路线图/阶段表已同步 P5/P6 完成；`frontend/README.md` 与 `FRONTEND_AGENT_PROGRESS.md` 已补 E2E 说明 |
+| 可选增强（不阻塞） | 真实积压演练、OTel/Zipkin、后端 multipart 上限→前端 5MB、E6 图片样本复现 |
 
 ---
 

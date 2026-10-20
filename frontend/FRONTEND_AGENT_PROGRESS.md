@@ -355,3 +355,14 @@ pnpm build        exit 0
 已知保留项：
 - 管理端仍无活动列表接口，运维页按 ID 载入（契约限制，前端不做伪造）。
 - 上传仍限 1MB（后端 multipart 未配置，属后端待办）。
+
+## 16. Playwright E2E 冒烟（2026-10-20）
+
+| 项 | 内容 |
+|---|---|
+| 范围 | `e2e/` 下 6 个 spec / 11 用例：认证、商品、活动、秒杀、管理台、AI 客服 |
+| 数据准备 | `e2e/support/api.ts` 直连网关 8090 创建并预热活动，`finally` 中 `reset-stock` 清理 |
+| 运行 | `pnpm e2e`（复用 5173 dev server）；浏览器版本不匹配时用 `E2E_CHROME_PATH` 指定 |
+| 结果 | **11 passed**；同时 `lint` / `type-check` / 49 单测 / `build` 全绿（提交 `8590287`） |
+| 选择器约定 | 优先 `getByRole`；Element Plus 的 radio 原生输入被隐藏，点击外层 `label`；同名 h1/h2 用 `level` 区分；`订单号` 这类多处出现的文本加 `exact: true` |
+| 环境依赖 | 网关 8090 + 各域服务；秒杀用例需 order 消费者在线（`FLASH_STREAM_AUTO_POLL=true`） |

@@ -23,6 +23,8 @@ pnpm dev
 | `pnpm lint` | ESLint 9 flat config，`--max-warnings=0` |
 | `pnpm type-check` | `vue-tsc --noEmit` |
 | `pnpm test` | Vitest 纯逻辑单测 |
+| `pnpm e2e` | Playwright E2E 冒烟（需网关与各域服务已启动） |
+| `pnpm e2e:report` | 查看上一次 E2E 的 HTML 报告 |
 
 ## 环境变量
 
@@ -40,20 +42,27 @@ pnpm dev
 3. 订单要落库需 `FLASH_STREAM_AUTO_POLL=true`（order 服务）。
 4. 管理端需在后端配置 `ADMIN_TOKEN`，然后在前端管理台输入同一令牌。
 
+## 端到端测试
+
+```bash
+pnpm exec playwright install chromium   # 首次安装浏览器
+pnpm e2e                                # 默认复用 5173 的 dev server
+```
+
+- 用例位于 `e2e/`，覆盖认证、商品、活动、秒杀、管理台、AI 客服共 11 个场景；
+- 数据准备直连网关 8090（`e2e/support/api.ts`），不经过 Vite 代理；
+- 若本机 Chromium 与 Playwright 版本不匹配，用 `E2E_CHROME_PATH` 指定可执行文件；
+- 环境变量：`E2E_BASE_URL`（默认 `http://127.0.0.1:5173`）、`E2E_API_BASE`（默认 `http://127.0.0.1:8090`）、`E2E_ADMIN_TOKEN`（默认 `admin-secret-2026`）。
+
 ## 目录
 
 ```text
 src/
-├── api/          # 按域封装协议，禁止在页面直接写 URL
-├── components/   # 展示与交互组件
-├── composables/  # 分页、倒计时、轮询等编排逻辑
-├── http/         # axios 实例、错误码、CSRF
-├── layouts/      # 用户端 / 管理端布局
-├── router/       # 路由表、守卫、导航配置
-├── stores/       # 仅跨页面共享状态
-├── types/        # 后端 DTO/VO 映射
-├── utils/        # 时间、金额、阶段判定等纯函数
-└── views/        # 页面容器
+├── modules/      # 按后端业务域拆分：auth / product / activity / seckill / order / analytics / ai / admin
+├── shared/       # 通用 UI、布局、composables、http、types、utils
+├── router/       # 路由表与守卫
+├── views/        # 首页与错误页
+└── main.ts
 ```
 
 ## 已实现页面
