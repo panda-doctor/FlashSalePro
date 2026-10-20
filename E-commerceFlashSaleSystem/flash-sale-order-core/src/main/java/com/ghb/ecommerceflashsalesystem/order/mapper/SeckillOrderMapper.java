@@ -3,10 +3,13 @@ package com.ghb.ecommerceflashsalesystem.order.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ghb.ecommerceflashsalesystem.domain.entity.SeckillOrder;
+import com.ghb.ecommerceflashsalesystem.order.dto.analytic.ActivityOrderAggRow;
+import com.ghb.ecommerceflashsalesystem.order.dto.analytic.DailyTrendRow;
+import com.ghb.ecommerceflashsalesystem.order.dto.analytic.OrderTotalsRow;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.ibatis.annotations.Select;
 
-import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -35,9 +38,52 @@ public interface SeckillOrderMapper extends BaseMapper<SeckillOrder> {
      *
      * <p>只给内部回填端点用；正常查询路径不走它。</p>
      */
-    @org.apache.ibatis.annotations.Select(
+    @Select(
             "SELECT * FROM seckill_order WHERE activity_id = #{activityId} AND status = 1 ORDER BY created_at")
     List<SeckillOrder> selectSuccessByActivityId(@Param("activityId") Long activityId);
+
+    /**
+     * 管理端看板汇总：一次 SQL 取订单数、成交额、成交用户、今日订单/成交额。
+     */
+    @Select("""
+            SELECT COUNT(*) AS orderCount,
+                   COALESCE(SUM(seckill_price), 0) AS gmv,
+                   COUNT(DISTINCT user_id) AS userCount,
+                   COALESCE(SUM(CASE WHEN created_at >= #{todayStart} THEN 1 ELSE 0 END), 0) AS todayOrderCount,
+                   COALESCE(SUM(CASE WHEN created_at >= #{todayStart} THEN seckill_price ELSE 0 END), 0) AS todayGmv
+            FROM seckill_order
+            WHERE status = 1
+            """)
+    OrderTotalsRow selectOrderTotals(@Param("todayStart") LocalDateTime todayStart);
+
+    /**
+     * 管理端看板：按天聚合已创建订单（只返回有数据的日期，空缺由服务层补 0）。
+     */
+    @Select("""
+            SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day,
+                   COUNT(*) AS orderCount,
+                   COALESCE(SUM(seckill_price), 0) AS gmv
+            FROM seckill_order
+            WHERE status = 1 AND created_at >= #{start}
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+            ORDER BY day
+            """)
+    List<DailyTrendRow> selectDailyTrend(@Param("start") LocalDateTime start);
+
+    /**
+     * 管理端看板：成交订单数 Top5 活动。
+     */
+    @Select("""
+            SELECT activity_id AS activityId,
+                   COUNT(*) AS orderCount,
+                   COALESCE(SUM(seckill_price), 0) AS gmv
+            FROM seckill_order
+            WHERE status = 1
+            GROUP BY activity_id
+            ORDER BY orderCount DESC, gmv DESC
+            LIMIT 5
+            """)
+    List<ActivityOrderAggRow> selectTopActivities();
 }
 
 

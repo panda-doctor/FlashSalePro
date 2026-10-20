@@ -1,14 +1,22 @@
 package com.ghb.ecommerceflashsalesystem.order.controller;
 
+import com.ghb.ecommerceflashsalesystem.common.api.PageResponse;
 import com.ghb.ecommerceflashsalesystem.common.api.Result;
 import com.ghb.ecommerceflashsalesystem.order.dto.request.DeadLetterReplayRequest;
+import com.ghb.ecommerceflashsalesystem.order.service.AdminDeadLetterQueryService;
 import com.ghb.ecommerceflashsalesystem.order.service.DeadLetterReplayService;
+import com.ghb.ecommerceflashsalesystem.order.vo.DeadLetterItemVO;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,12 +34,27 @@ import java.util.Map;
  * {@code X-Admin-Token}（与 auth-core 同 key、fail-closed）。</p>
  */
 @Slf4j
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/seckill")
 public class AdminMessageController {
 
     private final DeadLetterReplayService deadLetterReplayService;
+    private final AdminDeadLetterQueryService adminDeadLetterQueryService;
+
+    /**
+     * GET /api/admin/seckill/dead-letters：死信分页列表（status=3）。
+     * 只读日志，重放仍走 replay / replay-batch。
+     */
+    @GetMapping("/dead-letters")
+    public Result<PageResponse<DeadLetterItemVO>> pageDeadLetters(
+            @RequestParam(defaultValue = "1") @Min(1) long page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) long pageSize,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long activityId) {
+        return Result.success(adminDeadLetterQueryService.pageDeadLetters(page, pageSize, keyword, activityId));
+    }
 
     /** POST /api/admin/seckill/dead-letters/replay：人工重新投递一条已补偿的死信。 */
     @PostMapping("/dead-letters/replay")

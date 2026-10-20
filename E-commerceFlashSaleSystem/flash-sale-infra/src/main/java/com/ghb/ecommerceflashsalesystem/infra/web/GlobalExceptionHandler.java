@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
   public Result<Void> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
     log.warn("上传文件超过限制", e);
-    return Result.fail(ResultCode.PARAM_ERROR, "上传文件不能超过 6MB");
+    return Result.fail(ResultCode.PARAM_ERROR, "上传文件不能超过 5MB");
   }
 
   @ExceptionHandler(NoResourceFoundException.class)

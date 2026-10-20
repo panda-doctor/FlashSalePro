@@ -5,10 +5,17 @@
 # =====================================================
 server:
   port: ${PRODUCT_PORT:8084}
+  # 经网关访问时按 X-Forwarded-* 还原请求 host，图片 URL 才不会写成 127.0.0.1:8084
+  forward-headers-strategy: framework
 
 spring:
   application:
     name: flash-sale-product
+  servlet:
+    multipart:
+      # 业务层上限 5MB（AbstractImageStorage）；容器层必须不小于它，否则 1~5MB 图片会被 413 提前拒绝
+      max-file-size: 5MB
+      max-request-size: 10MB
   cloud:
     nacos:
       discovery:

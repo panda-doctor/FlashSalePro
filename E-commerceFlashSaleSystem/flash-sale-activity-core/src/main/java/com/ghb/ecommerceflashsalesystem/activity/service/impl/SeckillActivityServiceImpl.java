@@ -2,6 +2,8 @@ package com.ghb.ecommerceflashsalesystem.activity.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ghb.ecommerceflashsalesystem.common.api.PageResponse;
 import com.ghb.ecommerceflashsalesystem.common.api.ResultCode;
 import com.ghb.ecommerceflashsalesystem.common.exception.BusinessException;
 import com.ghb.ecommerceflashsalesystem.common.util.IdGenerator;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -50,6 +53,44 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
                 new LambdaQueryWrapper<SeckillActivity>()
                         .orderByDesc(SeckillActivity::getStartTime)
                         .last("LIMIT 50"));
+        return toItemVOs(activities);
+    }
+
+    @Override
+    public PageResponse<ActivityItemVO> pageActivities(long page, long pageSize, String keyword, String status) {
+        LambdaQueryWrapper<SeckillActivity> query = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isBlank()) {
+            query.like(SeckillActivity::getActivityName, keyword.trim());
+        }
+        ActivityStatusEnum statusFilter = parseActivityStatus(status);
+        if (statusFilter != null) {
+            query.eq(SeckillActivity::getStatus, statusFilter.getCode());
+        }
+        query.orderByDesc(SeckillActivity::getStartTime).orderByDesc(SeckillActivity::getId);
+
+        Page<SeckillActivity> result = seckillActivityMapper.selectPage(new Page<>(page, pageSize), query);
+        return new PageResponse<>(toItemVOs(result.getRecords()), result.getCurrent(), result.getSize(),
+                result.getTotal(), result.getPages());
+    }
+
+    /**
+     * 管理端状态筛选：接受枚举名（大小写不敏感）或 {@code ALL}；非法值按参数错误返回，避免落到系统错误。
+     */
+    private ActivityStatusEnum parseActivityStatus(String status) {
+        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status.trim())) {
+            return null;
+        }
+        try {
+            return ActivityStatusEnum.valueOf(status.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "无效的活动状态：" + status);
+        }
+    }
+
+    /**
+     * 实体列表 → 列表条目：商品信息一次批量查询，库存与预热标记逐条取缓存。
+     */
+    private List<ActivityItemVO> toItemVOs(List<SeckillActivity> activities) {
         if (activities == null || activities.isEmpty()) {
             return Collections.emptyList();
         }

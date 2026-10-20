@@ -34,7 +34,7 @@ spring:
           uri: lb://flash-sale-product
           predicates:
             # /uploads/** 不在 /api/** 下，必须单列 —— 静态图片的读取出口（FileStorageWebConfig 已随域迁入本服务）
-            - Path=/api/products/**,/api/admin/products/**,/api/admin/files/**,/uploads/**
+            - Path=/api/products/**,/api/admin/products,/api/admin/products/**,/api/admin/files/**,/uploads/**
         # P3 Day 4：activity 域已服务化（flash-sale-activity :8085）。
         # 只能列 activity 自己的三条管理端路径：同前缀下还有 analytics 的
         # /api/admin/seckill/activities/{id}/metrics、/{id}/snapshot 与 order 的
@@ -61,7 +61,7 @@ spring:
             # 所以这里补一条**精确** Path —— 不加会落到 monolith 的 /api/** 兜底上（先匹配先赢）。
             # 联调整改：补 replay-batch（死信批量重放，处理器同样只在 order 的 AdminMessageController；
             # 旧配置只登记了单条 /replay，批量路径会掉到单体兜底 → 单体不扫 order 包 → 404）。
-            - Path=/api/seckill/orders/*,/api/seckill/users/*/orders,/api/seckill/users/me/orders,/api/admin/seckill/dead-letters/replay,/api/admin/seckill/dead-letters/replay-batch,/api/admin/seckill/activities/*/snapshot
+            - Path=/api/seckill/orders/*,/api/seckill/users/*/orders,/api/seckill/users/me/orders,/api/admin/seckill/dead-letters,/api/admin/seckill/dead-letters/replay,/api/admin/seckill/dead-letters/replay-batch,/api/admin/seckill/activities/*/snapshot,/api/admin/orders,/api/admin/orders/*,/api/admin/analytics/**
         # 单体（P0 模块化单体）已注册为 flash-sale-monolith；
         # lb:// 走服务发现 + 客户端负载均衡（多实例时自动轮询），不再写死 IP:端口
         - id: flash-sale-monolith

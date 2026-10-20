@@ -168,6 +168,25 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public PageResponse<ProductVO> pageProducts(long page, long pageSize, String keyword, ProductStatusEnum status) {
+        QueryWrapper<Product> query = new QueryWrapper<>();
+        if (status != null) {
+            query.eq("status", status.getCode());
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            query.like("name", keyword.trim());
+        }
+        // updated_at 可能同秒，追加 id 保证翻页稳定
+        query.orderByDesc("updated_at").orderByDesc("id");
+        Page<Product> records = productMapper.selectPage(new Page<>(page, pageSize), query);
+        List<ProductVO> items = records.getRecords().stream()
+                .map(product -> convertToVO(product, false))
+                .toList();
+        return new PageResponse<>(items, records.getCurrent(), records.getSize(),
+                records.getTotal(), records.getPages());
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveProduct(ProductRequest request) {
         // E3：价格非负、库存>0 服务层兜底（DTO @Min 由 Controller @Valid 拦截，此处防内部调用/绕过直调）
