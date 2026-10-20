@@ -1,5 +1,5 @@
 import type { Router } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/modules/auth/store'
 
 /**
  * 权限模型与后端一致：公开 / 会话 / 管理令牌。

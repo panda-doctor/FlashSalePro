@@ -326,3 +326,32 @@ pnpm dev         HTTP 200（http://127.0.0.1:5173/）
 - 契约层完全按 Controller/DTO 事实源实现，未调用任何 `/internal/**`。
 - 公共层（`http/`、`router/`、`stores/auth.ts`）改动均记录在模块报告中，无跨模块副作用。
 - 剩余建议：Element Plus 改按需引入；补齐后端运行时联调；后端 multipart 配置修正后把前端上限同步为 5MB。
+
+## 15. 模块化重构与全方面优化（2026-10-19）
+
+按后端 8 个业务域重排前端目录，并落实四类优化。
+
+| 批次 | 内容 | 结果 |
+|---|---|---|
+| 1 | shared 基座 + Element Plus 按需引入 + 路由告警/favicon | 完成 |
+| 2 | auth / product 迁移；搜索防抖、请求取消、过期响应丢弃 | 完成 |
+| 3 | activity / seckill 拆分；`useSeckill` 五分支状态机 | 完成 |
+| 4 | order / analytics 迁移；`useRank` 收敛榜单 | 完成 |
+| 5 | ai / admin 迁移；AI 1.5s 节流 + AbortController；管理台活动 ID 记忆 | 完成 |
+| 6 | SkeletonBlock 统一骨架；新增 debounce / seckill 结果单测 | 完成 |
+
+关键指标：
+```
+pnpm type-check   exit 0（strict 未放宽）
+pnpm lint         exit 0（0 error / 0 warning）
+pnpm test         8 files / 49 tests passed
+pnpm build        exit 0
+```
+
+产物体积变化（gzip）：
+- 重构前：单一 `element-plus` chunk 916KB / **296KB gzip**，首屏强制全量加载。
+- 重构后：取消强制合并，Element Plus 组件按路由切分；首屏仅 `index`(41KB) + `vue`(44KB)，管理台专用表格/日期选择器延迟到对应路由。
+
+已知保留项：
+- 管理端仍无活动列表接口，运维页按 ID 载入（契约限制，前端不做伪造）。
+- 上传仍限 1MB（后端 multipart 未配置，属后端待办）。

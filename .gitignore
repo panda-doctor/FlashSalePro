@@ -2,6 +2,9 @@
 .vscode/
 .idea/
 
+# CodeBuddy 本地会话与计划文件
+.codebuddy/
+
 # 独立参考模块（org.py 包，与主项目 com.ghb 无关），不纳入版本控制
 mymodule/
 .notework.md

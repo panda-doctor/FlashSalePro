@@ -5,3 +5,7 @@ coverage/
 .DS_Store
 .vite/
 *.log
+
+# 联调截图与 Playwright 会话产物
+.playwright-cli/
+docs/e2e/

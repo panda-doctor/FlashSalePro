@@ -10,7 +10,7 @@ declare module 'vue-router' {
   }
 }
 
-const MainLayout = () => import('@/layouts/MainLayout.vue')
+const MainLayout = () => import('@/shared/layouts/MainLayout.vue')
 
 /**
  * 路由名约定（后续模块必须复用，导航依赖 hasRoute 自动显隐）：
@@ -31,55 +31,55 @@ export const routes: RouteRecordRaw[] = [
       {
         path: 'products',
         name: 'products',
-        component: () => import('@/views/ProductListView.vue'),
+        component: () => import('@/modules/product/views/ProductListView.vue'),
         meta: { title: '商品' },
       },
       {
         path: 'products/:id',
         name: 'product-detail',
-        component: () => import('@/views/ProductDetailView.vue'),
+        component: () => import('@/modules/product/views/ProductDetailView.vue'),
         meta: { title: '商品详情' },
       },
       {
         path: 'activities',
         name: 'activities',
-        component: () => import('@/views/ActivityListView.vue'),
+        component: () => import('@/modules/activity/views/ActivityListView.vue'),
         meta: { title: '秒杀活动' },
       },
       {
         path: 'activities/:id',
         name: 'activity-detail',
-        component: () => import('@/views/ActivityDetailView.vue'),
+        component: () => import('@/modules/activity/views/ActivityDetailView.vue'),
         meta: { title: '活动详情' },
       },
       {
         path: 'orders',
         name: 'orders',
-        component: () => import('@/views/OrdersView.vue'),
+        component: () => import('@/modules/order/views/OrdersView.vue'),
         meta: { title: '我的订单', requiresAuth: true },
       },
       {
         path: 'ai-support',
         name: 'ai-support',
-        component: () => import('@/views/AiSupportView.vue'),
+        component: () => import('@/modules/ai/views/AiSupportView.vue'),
         meta: { title: 'AI 客服' },
       },
       {
         path: 'login',
         name: 'login',
-        component: () => import('@/views/LoginView.vue'),
+        component: () => import('@/modules/auth/views/LoginView.vue'),
         meta: { title: '登录' },
       },
       {
         path: 'register',
         name: 'register',
-        component: () => import('@/views/RegisterView.vue'),
+        component: () => import('@/modules/auth/views/RegisterView.vue'),
         meta: { title: '注册' },
       },
       {
         path: 'profile',
         name: 'profile',
-        component: () => import('@/views/ProfileView.vue'),
+        component: () => import('@/modules/auth/views/ProfileView.vue'),
         meta: { title: '个人中心', requiresAuth: true },
       },
       {
@@ -93,26 +93,26 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     name: 'admin',
-    component: () => import('@/layouts/AdminLayout.vue'),
+    component: () => import('@/modules/admin/layouts/AdminLayout.vue'),
+    redirect: { name: 'admin-products' },
     meta: { title: '管理台', requiresAdmin: true },
     children: [
-      { path: '', redirect: { name: 'admin-products' } },
       {
         path: 'products',
         name: 'admin-products',
-        component: () => import('@/views/admin/AdminProductView.vue'),
+        component: () => import('@/modules/admin/views/AdminProductView.vue'),
         meta: { title: '商品管理', requiresAdmin: true },
       },
       {
         path: 'activities',
         name: 'admin-activities',
-        component: () => import('@/views/admin/AdminActivityView.vue'),
+        component: () => import('@/modules/admin/views/AdminActivityView.vue'),
         meta: { title: '活动运维', requiresAdmin: true },
       },
       {
         path: 'users',
         name: 'admin-users',
-        component: () => import('@/views/admin/AdminUserView.vue'),
+        component: () => import('@/modules/admin/views/AdminUserView.vue'),
         meta: { title: '用户管理', requiresAdmin: true },
       },
     ],

@@ -174,5 +174,24 @@
 8. **订单详情对不存在单号返回 QUEUING** → 轮询必须设上限与兜底文案。
 9. **`/api/seckill/execute` 的 result 无枚举类** → 前端自建 union 并做穷举。
 10. **AI 接口公开且无限流** → 前端做提交节流，仅在页面提示。
-11. **Element Plus 全量引入**（当前 916KB / gzip 296KB）→ 后续可切按需引入，记入优化清单。
+11. ~~**Element Plus 全量引入**（916KB / gzip 296KB）~~ → **已改为按需引入**（unplugin-vue-components + unplugin-element-plus），首屏只加载当前路由用到的组件。
 12. 前端不调用 `/internal/**`、`GET /api/seckill/users/{userId}/orders`（与 me 重复）。
+
+## 8. 前端模块目录 ↔ 后端业务域（2026-10-19 重构）
+
+| 前端模块目录 | 后端域 / 端口 | 目录内容 |
+|---|---|---|
+| `src/shared/` | common / infra / gateway | `api/`（client、csrf、errorCode）、`types/common.ts`、`ui/`（EmptyState、SkeletonBlock）、`composables/`（usePagedQuery、useNow）、`utils/`（money、time、dict、validators、debounce）、`layouts/MainLayout.vue` |
+| `src/modules/auth/` | auth :8082 | `api.ts`（含 `/api/admin/users`）、`types.ts`、`store.ts`、`views/`（Login/Register/Profile）、`components/AuthShell.vue` |
+| `src/modules/product/` | product :8084 | `api.ts`（含 admin 商品与图片上传契约）、`types.ts`、`views/`、`components/`（ProductCard、ProductImage） |
+| `src/modules/activity/` | activity :8085 | `api.ts`（含创建/预热/重置契约）、`types.ts`、`views/`、`components/`（ActivityCard、CountdownText、StockProgress）、`utils/activityPhase.ts` |
+| `src/modules/seckill/` | seckill :8086 | `api.ts`（execute + check）、`types.ts`、`components/SeckillPanel.vue`、`composables/useSeckill.ts`（五分支状态机） |
+| `src/modules/order/` | order :8087 | `api.ts`（含死信重放）、`types.ts`、`views/OrdersView.vue`、`components/`、`composables/useOrderPolling.ts`、`utils/orderStatus.ts` |
+| `src/modules/analytics/` | analytics（bootstrap :8081） | `api.ts`（`/api/rank/top10` + 管理端指标）、`types.ts`、`components/`（RankList、MetricsPanel）、`composables/useRank.ts` |
+| `src/modules/ai/` | ai :8083 | `api.ts`、`views/AiSupportView.vue`、`components/ChatPanel.vue` |
+| `src/modules/admin/` | 横切（管理令牌） | `store/adminToken.ts`、`layouts/AdminLayout.vue`、`views/`（商品/活动/用户）、`components/`（TokenGate、ImageUploader、ActivityForm、ProductForm、UserForm、DeadLetterPanel） |
+
+约定：
+- 管理端**接口契约归属业务域**（如 `saveAdminActivity` 在 `modules/activity/api.ts`），`modules/admin` 只放视图与令牌闸门。
+- 单测与被测文件同目录（`*.spec.ts`），由 `vite.config.ts` 的 `test.include` 统一收集。
+- 路由 URL 与路由名保持不变，仅 `router/routes.ts` 的 import 指向 `src/modules/**`。
