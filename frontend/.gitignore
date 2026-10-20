@@ -9,3 +9,7 @@ coverage/
 # 联调截图与 Playwright 会话产物
 .playwright-cli/
 docs/e2e/
+
+# Playwright 产物
+test-results/
+playwright-report/
