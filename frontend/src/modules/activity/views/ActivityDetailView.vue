@@ -55,6 +55,24 @@ const discount = computed(() =>
     : null,
 )
 
+const stateClass = computed(() => {
+  if (state.value === 'RUNNING') return 'border-brand bg-brand text-[#FFFBF5]'
+  if (state.value === 'NOT_STARTED' || state.value === 'NOT_PREHEATED') {
+    return 'border-warning/25 bg-warning/10 text-warning'
+  }
+  if (state.value === 'SOLD_OUT' || state.value === 'CANCELLED') {
+    return 'border-danger/25 bg-danger/10 text-danger'
+  }
+  return 'border-line bg-surface/90 text-ink-700'
+})
+
+const steps = [
+  { no: '01', title: '进入活动', note: '确认时间窗与实时库存' },
+  { no: '02', title: '提交抢购', note: '登录后由 Lua 原子预扣' },
+  { no: '03', title: '等待落库', note: '异步创建订单，可轮询结果' },
+]
+
+
 function loadRank(): void {
   void rankState.load(activityId.value)
 }
@@ -110,21 +128,21 @@ watch(activityId, load, { immediate: true })
 </script>
 
 <template>
-  <div class="page-container py-8">
-    <nav class="mb-5 flex items-center gap-2 text-sm text-ink-500" aria-label="面包屑">
-      <RouterLink :to="{ name: 'activities' }" class="hover:text-brand">秒杀活动</RouterLink>
-      <span aria-hidden="true">/</span>
+  <div class="page-container py-10 sm:py-12">
+    <nav class="mb-6 flex items-center gap-2 text-sm text-ink-500" aria-label="面包屑">
+      <RouterLink :to="{ name: 'activities' }" class="transition-colors hover:text-brand-dark">秒杀活动</RouterLink>
+      <span aria-hidden="true" class="text-ink-300">/</span>
       <span class="text-ink-900">活动详情</span>
     </nav>
 
-    <div v-if="loading" class="grid gap-8 lg:grid-cols-[minmax(0,420px)_1fr]">
+    <div v-if="loading" class="grid gap-10 lg:grid-cols-[minmax(0,440px)_1fr]">
       <div class="surface-card aspect-square animate-pulse bg-muted" />
       <div class="space-y-4">
         <div class="h-6 w-24 animate-pulse rounded bg-muted" />
-        <div class="h-8 w-2/3 animate-pulse rounded bg-muted" />
-        <div class="h-24 animate-pulse rounded bg-muted" />
-        <div class="h-14 animate-pulse rounded bg-muted" />
-        <div class="h-32 animate-pulse rounded bg-muted" />
+        <div class="h-9 w-2/3 animate-pulse rounded bg-muted" />
+        <div class="h-28 animate-pulse rounded-2xl bg-muted" />
+        <div class="h-16 animate-pulse rounded-2xl bg-muted" />
+        <div class="h-32 animate-pulse rounded-2xl bg-muted" />
       </div>
     </div>
 
@@ -145,23 +163,33 @@ watch(activityId, load, { immediate: true })
     />
 
     <template v-else-if="activity">
-      <div class="grid gap-8 lg:grid-cols-[minmax(0,420px)_1fr]">
-        <div>
-          <div class="surface-card overflow-hidden">
-            <div class="aspect-square w-full">
-              <ProductImage :src="product?.imageUrl ?? null" :alt="product?.name || activity.activityName" eager />
+      <div class="grid gap-10 lg:grid-cols-[minmax(0,440px)_1fr] lg:gap-14">
+        <div class="lg:sticky lg:top-24 lg:self-start">
+          <div class="relative">
+            <div class="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-atelier-rose/70 via-atelier-sand/40 to-transparent" aria-hidden="true" />
+            <div class="surface-card relative overflow-hidden rounded-3xl">
+              <div class="aspect-[4/3] w-full sm:aspect-square">
+                <ProductImage :src="product?.imageUrl ?? null" :alt="product?.name || activity.activityName" eager />
+              </div>
+              <span
+                class="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium backdrop-blur-sm"
+                :class="stateClass"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                {{ meta.label }}
+              </span>
             </div>
           </div>
 
-          <section v-if="product" class="surface-card mt-4 p-5">
-            <h2 class="text-sm font-semibold">商品信息</h2>
+          <section v-if="product" class="surface-card mt-5 hidden p-5 lg:block">
+            <p class="text-[10px] uppercase tracking-[0.22em] text-ink-500">Linked product</p>
             <RouterLink
               :to="{ name: 'product-detail', params: { id: product.productId } }"
-              class="mt-2 block text-[15px] font-medium text-ink-900 hover:text-brand"
+              class="mt-1.5 block text-[15px] font-medium text-ink-900 transition-colors hover:text-brand-dark"
             >
               {{ product.name }}
             </RouterLink>
-            <p class="mt-1 line-clamp-3 text-sm leading-6 text-ink-500">
+            <p class="mt-1.5 line-clamp-3 text-sm leading-6 text-ink-500">
               {{ product.description || '商家未填写商品描述。' }}
             </p>
             <p class="num mt-3 text-sm text-ink-500">标价 {{ formatPrice(product.originalPrice) }}</p>
@@ -170,46 +198,48 @@ watch(activityId, load, { immediate: true })
 
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <el-tag :type="meta.tagType" effect="light">{{ meta.label }}</el-tag>
             <span class="num text-xs text-ink-500">活动 ID {{ activity.activityId }}</span>
           </div>
 
-          <h1 class="mt-3 text-2xl font-semibold leading-snug">{{ activity.activityName }}</h1>
-          <p class="mt-1 text-sm text-ink-500">{{ product?.name || '商品信息加载中' }}</p>
+          <h1 class="page-title mt-3">{{ activity.activityName }}</h1>
+          <p class="mt-2 text-sm text-ink-500">{{ product?.name || '商品信息加载中' }}</p>
 
-          <div class="mt-5 rounded-xl border border-brand/15 bg-gradient-to-r from-brand-soft to-white px-5 py-4">
-            <div class="flex items-end gap-2">
-              <span class="num text-3xl font-semibold leading-none text-price">
-                {{ formatPrice(activity.seckillPrice) }}
-              </span>
-              <span
-                v-if="product && product.originalPrice > activity.seckillPrice"
-                class="num text-sm leading-none text-ink-300 line-through"
-              >
-                {{ formatPrice(product.originalPrice) }}
-              </span>
-            </div>
-            <p v-if="discount !== null" class="mt-1.5 text-xs text-brand-dark">相当于原价 {{ discount }}%</p>
-          </div>
-
-          <div class="mt-4 rounded-lg bg-muted px-4 py-3">
-            <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="mt-6 overflow-hidden rounded-2xl border border-brand/15 bg-gradient-to-br from-brand-soft via-atelier-rose/60 to-surface p-6">
+            <div class="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p class="text-xs text-ink-500">时间窗（GMT+8）</p>
-                <p class="num mt-0.5 text-sm text-ink-900">
-                  {{ activity.startTime }} ~ {{ activity.endTime }}
-                </p>
+                <p class="text-xs font-medium tracking-wide text-brand-dark">秒杀价</p>
+                <div class="mt-2 flex items-end gap-3">
+                  <span class="num text-[36px] font-semibold leading-none text-price sm:text-[40px]">
+                    {{ formatPrice(activity.seckillPrice) }}
+                  </span>
+                  <span
+                    v-if="product && product.originalPrice > activity.seckillPrice"
+                    class="num pb-1 text-sm leading-none text-ink-500 line-through"
+                  >
+                    {{ formatPrice(product.originalPrice) }}
+                  </span>
+                </div>
               </div>
-              <CountdownText
-                :start-time="activity.startTime"
-                :end-time="activity.endTime"
-                :now="now"
-                :state="state"
-              />
+              <span v-if="discount !== null" class="rounded-full bg-surface/80 px-3 py-1.5 text-xs font-medium text-brand-dark">
+                省 {{ Math.max(0, 100 - discount) }}%
+              </span>
             </div>
           </div>
 
-          <div class="mt-4">
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/80 bg-surface px-4 py-3">
+            <div>
+              <p class="text-xs text-ink-500">时间窗（GMT+8）</p>
+              <p class="num mt-0.5 text-sm text-ink-900">{{ activity.startTime }} ~ {{ activity.endTime }}</p>
+            </div>
+            <CountdownText
+              :start-time="activity.startTime"
+              :end-time="activity.endTime"
+              :now="now"
+              :state="state"
+            />
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-line/80 bg-surface px-4 py-3.5">
             <StockProgress :total="activity.totalStock" :remaining="activity.stock" />
           </div>
 
@@ -223,18 +253,32 @@ watch(activityId, load, { immediate: true })
             />
           </div>
 
+          <section class="mt-6 rounded-2xl border border-line/80 bg-surface p-4" aria-label="抢购流程">
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div v-for="step in steps" :key="step.no" class="flex items-start gap-2.5">
+                <span class="num grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[10px] font-semibold text-brand-dark">
+                  {{ step.no }}
+                </span>
+                <div>
+                  <p class="text-xs font-medium text-ink-900">{{ step.title }}</p>
+                  <p class="mt-0.5 text-[11px] leading-5 text-ink-500">{{ step.note }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <p class="mt-4 text-xs leading-5 text-ink-500">
             活动 status 为创建时快照，阶段以时间窗与实时库存为准；剩余库存来自 Redis，未预热时为空。
           </p>
 
-          <el-button class="mt-4" text @click="$router.push({ name: 'activities' })">
+          <el-button class="mt-3" text @click="$router.push({ name: 'activities' })">
             <ArrowLeft :size="14" class="mr-1" aria-hidden="true" />
             返回活动大厅
           </el-button>
         </div>
       </div>
 
-      <div class="mt-8">
+      <div class="mt-10">
         <RankList :entries="rank" :loading="rankLoading" @refresh="loadRank" />
       </div>
     </template>

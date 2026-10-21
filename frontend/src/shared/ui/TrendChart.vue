@@ -83,8 +83,8 @@ const gradientId = `trend-fill-${Math.random().toString(36).slice(2, 9)}`
     >
       <defs>
         <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#409EFF" stop-opacity="0.28" />
-          <stop offset="100%" stop-color="#409EFF" stop-opacity="0.02" />
+          <stop offset="0%" style="stop-color: var(--nocturne-brand); stop-opacity: 0.2" />
+          <stop offset="100%" style="stop-color: var(--nocturne-brand); stop-opacity: 0.02" />
         </linearGradient>
       </defs>
 
@@ -94,7 +94,7 @@ const gradientId = `trend-fill-${Math.random().toString(36).slice(2, 9)}`
           :x2="width - padding.right"
           :y1="tick.y"
           :y2="tick.y"
-          stroke="#E4E7ED"
+          class="stroke-line"
           stroke-dasharray="4 6"
         />
         <text
@@ -110,8 +110,8 @@ const gradientId = `trend-fill-${Math.random().toString(36).slice(2, 9)}`
       <path :d="areaPath" :fill="`url(#${gradientId})`" />
       <polyline
         :points="linePoints"
+        class="stroke-brand-light"
         fill="none"
-        stroke="#409EFF"
         stroke-width="2.5"
         stroke-linejoin="round"
         stroke-linecap="round"
@@ -125,8 +125,7 @@ const gradientId = `trend-fill-${Math.random().toString(36).slice(2, 9)}`
           :cx="point.x"
           :cy="point.y"
           r="3.5"
-          fill="#FFFFFF"
-          stroke="#409EFF"
+          class="fill-surface stroke-brand"
           stroke-width="2"
         />
         <text

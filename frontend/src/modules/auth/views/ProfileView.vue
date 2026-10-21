@@ -30,10 +30,11 @@ function onLogout(): void {
 </script>
 
 <template>
-  <div class="page-container py-10">
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold">个人中心</h1>
-      <p class="mt-1 text-sm text-ink-500">账号信息来自 GET /api/auth/me，退出后会话立即撤销。</p>
+  <div class="page-container py-10 sm:py-12">
+    <div class="mb-7">
+      <p class="eyebrow">Account / 05</p>
+      <h1 class="page-title mt-3">个人中心</h1>
+      <p class="page-intro mt-3">账号信息来自 GET /api/auth/me，退出后会话立即撤销。</p>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-[320px_1fr]">

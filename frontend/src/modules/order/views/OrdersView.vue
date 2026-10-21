@@ -136,13 +136,14 @@ onUnmounted(clearRefresh)
 </script>
 
 <template>
-  <div class="page-container py-8">
-    <header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="page-container py-10 sm:py-12">
+    <header class="flex flex-wrap items-end justify-between gap-5">
       <div>
-        <h1 class="text-2xl font-semibold">我的订单</h1>
-        <p class="mt-1 text-sm text-ink-500">
+        <p class="eyebrow">Orders / 04</p>
+        <h1 class="page-title mt-3">我的订单</h1>
+        <p class="page-intro mt-3">
           共
-          <span class="num font-medium text-ink-900">{{ orders.length }}</span>
+          <span class="num font-semibold text-ink-900">{{ orders.length }}</span>
           笔订单。排队中的订单会自动刷新，直至落库或超时。
         </p>
       </div>
@@ -152,9 +153,9 @@ onUnmounted(clearRefresh)
       </el-button>
     </header>
 
-    <section class="surface-card mt-6 flex flex-wrap items-center gap-3 p-4">
+    <section class="surface-card mt-7 flex flex-wrap items-center gap-3 p-5">
       <div class="w-full sm:w-64">
-        <label for="order-keyword" class="mb-1 block text-xs text-ink-500">订单号</label>
+        <label for="order-keyword" class="mb-1.5 block text-xs font-medium text-ink-700">订单号</label>
         <el-input id="order-keyword" v-model="keyword" placeholder="输入订单号筛选" clearable>
           <template #prefix>
             <Search :size="15" aria-hidden="true" />
@@ -162,7 +163,7 @@ onUnmounted(clearRefresh)
         </el-input>
       </div>
 
-      <el-radio-group v-model="statusFilter" class="sm:ml-auto">
+      <el-radio-group v-model="statusFilter" class="filter-pills sm:ml-auto">
         <el-radio-button v-for="option in filters" :key="option.value" :value="option.value">
           {{ option.label }}
         </el-radio-button>

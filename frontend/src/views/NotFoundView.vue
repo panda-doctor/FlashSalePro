@@ -15,7 +15,7 @@ function goBack(): void {
 
 <template>
   <div class="page-container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
-    <div class="grid h-16 w-16 place-items-center rounded-2xl bg-brand-soft text-brand">
+    <div class="grid h-16 w-16 place-items-center rounded-2xl bg-brand-soft text-brand-dark">
       <Compass :size="30" :stroke-width="1.8" aria-hidden="true" />
     </div>
     <p class="num mt-6 text-5xl font-semibold tracking-tight text-ink-900">404</p>

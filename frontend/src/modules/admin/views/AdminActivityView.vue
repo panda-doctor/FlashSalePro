@@ -141,7 +141,7 @@ onMounted(() => {
       />
 
       <template v-else>
-        <div class="surface-card overflow-hidden">
+        <div class="surface-card overflow-x-auto">
           <el-table :data="items" row-key="activityId" class="w-full" table-layout="fixed">
             <el-table-column label="ID" width="86">
               <template #default="{ row }">

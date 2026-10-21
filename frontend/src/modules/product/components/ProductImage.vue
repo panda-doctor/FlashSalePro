@@ -33,7 +33,7 @@ function onLoad(event: Event): void {
 </script>
 
 <template>
-  <div class="relative h-full w-full overflow-hidden bg-muted">
+  <div class="relative h-full w-full overflow-hidden bg-surface">
     <img
       v-if="showImage"
       :src="src ?? undefined"
@@ -44,9 +44,12 @@ function onLoad(event: Event): void {
       @load="onLoad"
       @error="failed = true"
     />
-    <div v-else class="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-300">
-      <ImageOff :size="22" :stroke-width="1.6" aria-hidden="true" />
-      <span class="text-xs">暂无图片</span>
+    <div
+      v-else
+      class="flex h-full w-full flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_30%_20%,#FBF4EC,#F5E7DA)] text-ink-500"
+    >
+      <ImageOff :size="22" :stroke-width="1.5" aria-hidden="true" />
+      <span class="text-[11px] tracking-wide">暂无图片</span>
     </div>
   </div>
 </template>

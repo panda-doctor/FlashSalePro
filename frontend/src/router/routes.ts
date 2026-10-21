@@ -7,6 +7,8 @@ declare module 'vue-router' {
     requiresAuth?: boolean
     /** 需要管理端令牌（X-Admin-Token），页面内再渲染令牌闸门 */
     requiresAdmin?: boolean
+    /** 深色沉浸页：顶栏初始透明叠在页面之上，滚动后转为浅色玻璃 */
+    transparentHeader?: boolean
   }
 }
 
@@ -26,7 +28,7 @@ export const routes: RouteRecordRaw[] = [
         path: '',
         name: 'home',
         component: () => import('@/views/HomeView.vue'),
-        meta: { title: '首页' },
+        meta: { title: '首页', transparentHeader: true },
       },
       {
         path: 'products',

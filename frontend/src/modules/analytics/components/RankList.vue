@@ -9,9 +9,9 @@ withDefaults(defineProps<{ entries: RankEntryVO[]; loading?: boolean }>(), { loa
 defineEmits<{ refresh: [] }>()
 
 function rankClass(rank: number): string {
-  if (rank === 1) return 'bg-[#FFF4E0] text-[#B7791F]'
-  if (rank === 2) return 'bg-[#F1F3F6] text-[#5A6672]'
-  if (rank === 3) return 'bg-[#FDEEE6] text-[#B4592C]'
+  if (rank === 1) return 'bg-warning/10 text-warning'
+  if (rank === 2) return 'bg-atelier-sand/70 text-atelier-clay'
+  if (rank === 3) return 'bg-brand-soft text-brand-dark'
   return 'bg-muted text-ink-500'
 }
 </script>

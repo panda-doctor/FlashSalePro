@@ -174,7 +174,7 @@ function onReset(): void {
       </form>
     </section>
 
-    <section class="surface-card mt-5 overflow-hidden">
+    <section class="surface-card mt-5 overflow-x-auto">
       <EmptyState
         v-if="error"
         title="用户加载失败"

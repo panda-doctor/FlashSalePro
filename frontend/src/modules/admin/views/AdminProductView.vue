@@ -196,7 +196,7 @@ function toggleShelf(product: ProductVO): void {
       />
 
       <template v-else>
-        <div class="surface-card overflow-hidden">
+        <div class="surface-card overflow-x-auto">
           <el-table :data="items" row-key="productId" class="w-full" table-layout="fixed">
             <el-table-column label="商品" min-width="240">
               <template #default="{ row }">

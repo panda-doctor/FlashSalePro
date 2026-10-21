@@ -140,7 +140,7 @@ function onSubmit(): void {
             {{ selectedProductName || `商品 ${form.productId}` }}
             <span class="num ml-1 text-xs text-ink-500">#{{ form.productId }}</span>
           </span>
-          <span v-else class="text-ink-300">尚未选择商品</span>
+          <span v-else class="text-ink-500">尚未选择商品</span>
         </div>
         <el-button @click="openPicker">选择商品</el-button>
       </div>

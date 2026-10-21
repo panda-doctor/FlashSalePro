@@ -94,22 +94,27 @@ async function onSeckill(): Promise<void> {
 </script>
 
 <template>
-  <div class="rounded-xl border border-line/70 bg-muted/60 p-4">
-    <div class="grid grid-cols-2 gap-3">
-      <div>
+  <div class="rounded-2xl border border-brand/15 bg-gradient-to-br from-brand-soft/70 via-surface to-surface p-5">
+    <div class="flex items-center justify-between gap-3">
+      <p class="text-[10px] uppercase tracking-[0.24em] text-brand-dark">Secure checkout</p>
+      <span class="rounded-full bg-surface/80 px-2.5 py-1 text-[10px] text-ink-500">一人一单</span>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-3">
+      <div class="rounded-xl border border-line/70 bg-surface/80 px-3.5 py-3">
         <p class="text-xs text-ink-500">限购</p>
-        <p class="mt-0.5 text-sm font-medium">每人 {{ limitPerUser }} 件</p>
+        <p class="mt-0.5 text-sm font-semibold text-ink-900">每人 {{ limitPerUser }} 件</p>
       </div>
-      <div>
+      <div class="rounded-xl border border-line/70 bg-surface/80 px-3.5 py-3">
         <p class="text-xs text-ink-500">剩余库存</p>
-        <p class="num mt-0.5 text-lg font-semibold leading-tight text-ink-900">{{ stock ?? '—' }}</p>
+        <p class="num mt-0.5 text-lg font-semibold leading-tight text-brand-dark">{{ stock ?? '—' }}</p>
       </div>
     </div>
 
     <el-button
-      type="primary"
+      :type="canBuy ? 'primary' : 'default'"
       size="large"
-      class="mt-3 w-full"
+      class="mt-4 w-full"
       :disabled="!canBuy"
       :loading="submitting"
       @click="onSeckill"
@@ -117,9 +122,9 @@ async function onSeckill(): Promise<void> {
       {{ buttonLabel }}
     </el-button>
 
-    <p class="mt-2 text-xs leading-5 text-ink-500">{{ hint }}</p>
+    <p class="mt-2.5 text-xs leading-5 text-ink-500">{{ hint }}</p>
 
-    <div v-if="lastResult?.orderNo" class="mt-3 rounded-lg bg-surface p-3">
+    <div v-if="lastResult?.orderNo" class="mt-4 rounded-xl border border-line/70 bg-surface p-4">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <p class="text-xs text-ink-500">订单号</p>
@@ -130,7 +135,7 @@ async function onSeckill(): Promise<void> {
 
       <p class="mt-2 flex items-center gap-1.5 text-xs text-ink-500">
         <template v-if="isPolling">
-          <Loader2 :size="12" class="animate-spin" aria-hidden="true" />
+          <Loader2 :size="12" class="animate-spin text-brand-dark" aria-hidden="true" />
           正在确认落库结果（第 {{ pollingAttempts }} 次）
         </template>
         <template v-else-if="pollingDetail?.status === 'CREATED'">订单已落库，可在“我的订单”查看</template>

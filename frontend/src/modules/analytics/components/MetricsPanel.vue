@@ -99,7 +99,7 @@ const cards = computed(() => [
       </el-button>
     </header>
 
-    <p v-if="errorMessage" class="mt-3 rounded-lg bg-[#FEF0F0] px-3 py-2 text-xs text-danger" role="alert">
+    <p v-if="errorMessage" class="mt-3 rounded-lg bg-danger/5 px-3 py-2 text-xs text-danger" role="alert">
       {{ errorMessage }}
     </p>
 
@@ -107,7 +107,7 @@ const cards = computed(() => [
       <div v-for="card in cards" :key="card.label" class="rounded-lg border border-line/70 bg-muted/60 p-3">
         <p class="text-xs text-ink-500">{{ card.label }}</p>
         <p class="num mt-1 text-xl font-semibold leading-tight text-ink-900">{{ card.value }}</p>
-        <p class="mt-0.5 text-[11px] text-ink-300">{{ card.hint }}</p>
+        <p class="mt-0.5 text-[11px] text-ink-500">{{ card.hint }}</p>
       </div>
     </div>
 

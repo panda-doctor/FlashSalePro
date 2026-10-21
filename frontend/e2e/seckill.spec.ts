@@ -57,7 +57,8 @@ test.describe('秒杀主链路', () => {
       await buyButton.click()
       await expect(page.getByText('订单号', { exact: true })).toBeVisible({ timeout: 15_000 })
 
-      await page.waitForTimeout(1_200) // 越过前端 1s 节流
+      // 同时越过前端 1s 节流与后端限流窗口，确保命中「重复参与」而不是「请求过于频繁」
+      await page.waitForTimeout(2_500)
       await buyButton.click()
       await expect(page.getByText(/请勿重复秒杀|已参与/).first()).toBeVisible({ timeout: 10_000 })
     } finally {

@@ -26,9 +26,12 @@ const text = computed(() => {
 </script>
 
 <template>
-  <span v-if="target !== null" class="inline-flex items-center gap-1.5 text-xs text-ink-500">
-    <Timer :size="13" aria-hidden="true" />
+  <span
+    v-if="target !== null"
+    class="inline-flex items-center gap-1.5 rounded-full border border-brand/15 bg-brand-soft/70 px-2.5 py-1 text-[11px] text-brand-dark"
+  >
+    <Timer :size="12" aria-hidden="true" />
     {{ prefix }}
-    <span class="num font-medium text-brand-dark">{{ text }}</span>
+    <span class="num font-semibold tracking-wide">{{ text }}</span>
   </span>
 </template>

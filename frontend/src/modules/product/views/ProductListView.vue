@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { RefreshCw, Search } from 'lucide-vue-next'
+import { Boxes, Database, ReceiptText, RefreshCw, Search, X } from 'lucide-vue-next'
 import ProductCard from '@/modules/product/components/ProductCard.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
-import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
 import { listProducts } from '@/modules/product/api'
 import { usePagedQuery } from '@/shared/composables/usePagedQuery'
 import { debounce } from '@/shared/utils/debounce'
@@ -51,6 +50,11 @@ function onClear(): void {
   onSubmit()
 }
 
+function onPageSizeChange(event: Event): void {
+  const value = Number((event.target as HTMLSelectElement).value)
+  if (Number.isFinite(value) && value > 0) setPageSize(value)
+}
+
 onBeforeUnmount(() => onKeywordInput.cancel())
 
 watch(
@@ -65,99 +69,188 @@ watch(
 </script>
 
 <template>
-  <div class="page-container py-8">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold">商品货架</h1>
-        <p class="mt-1 text-sm text-ink-500">
-          仅展示上架商品，共
-          <span class="num font-medium text-ink-900">{{ total }}</span>
-          件
+  <div class="product-page min-h-[70vh] pb-16">
+    <section
+      class="relative isolate overflow-hidden bg-gradient-to-br from-[#FBF0E6] via-[#F8EADD] to-[#FAF6F1] text-ink-900"
+      aria-label="限时秒杀横幅"
+    >
+      <div
+        class="pointer-events-none absolute -left-24 -top-32 h-72 w-72 rounded-full bg-brand/25 blur-[90px]"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -bottom-40 right-[-6rem] h-80 w-80 rounded-full bg-[#FFB266]/20 blur-[110px]"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style="background-image: radial-gradient(rgba(184, 132, 102, 0.38) 1px, transparent 1px); background-size: 22px 22px"
+        aria-hidden="true"
+      />
+      <div class="page-container relative py-10 sm:py-12">
+        <header class="flex flex-wrap items-end justify-between gap-5">
+          <div class="min-w-0">
+            <p class="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-dark">
+              <span class="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+              Limited Deal / 01
+            </p>
+            <h1 class="mt-3 font-display text-[clamp(28px,3.6vw,40px)] font-bold leading-tight tracking-tight">
+              商品货架
+            </h1>
+            <p class="mt-3 max-w-2xl text-sm leading-7 text-ink-500">
+              仅展示上架商品，共
+              <span class="num font-semibold text-price">{{ total }}</span>
+              件。价格与普通库存来自实时接口，秒杀库存以活动预热为准。
+            </p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-surface/80 px-6 py-3 text-sm font-medium tracking-wide text-ink-700 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:bg-surface hover:text-brand-dark hover:shadow-[0_14px_30px_rgba(120,72,48,0.16)]"
+            :disabled="loading"
+            @click="refresh"
+          >
+            <RefreshCw :size="15" :class="{ 'animate-spin': loading }" aria-hidden="true" />
+            刷新
+          </button>
+        </header>
+      </div>
+    </section>
+
+    <div class="page-container py-8 sm:py-10">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-[11px] font-medium text-ink-700 shadow-card sm:text-xs">
+          <span class="relative flex h-1.5 w-1.5" aria-hidden="true">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-50 motion-reduce:hidden" />
+            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand" />
+          </span>
+          <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-soft text-brand-dark">
+            <Database :size="13" aria-hidden="true" />
+          </span>
+          接口实时价格
+        </span>
+        <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-[11px] font-medium text-ink-700 shadow-card sm:text-xs">
+          <span class="grid h-6 w-6 place-items-center rounded-full bg-warning/15 text-warning">
+            <Boxes :size="13" aria-hidden="true" />
+          </span>
+          在售目录
+          <span class="num font-semibold text-brand-dark">{{ total }}</span>
+        </span>
+        <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-[11px] font-medium text-ink-700 shadow-card sm:text-xs">
+          <span class="grid h-6 w-6 place-items-center rounded-full bg-warning/15 text-warning">
+            <ReceiptText :size="13" aria-hidden="true" />
+          </span>
+          订单可追踪
+        </span>
+      </div>
+
+      <section class="surface-card relative mt-5 overflow-hidden p-4 sm:mt-6 sm:p-5">
+        <div class="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" aria-hidden="true" />
+        <form class="flex flex-col gap-4 lg:flex-row lg:items-end" role="search" @submit.prevent="onSubmit">
+          <div class="min-w-0 flex-1">
+            <label for="product-keyword" class="text-xs font-medium tracking-wide text-ink-700">商品关键字</label>
+            <div class="relative mt-1.5">
+              <Search class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-500" :size="16" aria-hidden="true" />
+              <input
+                id="product-keyword"
+                v-model="query.keyword"
+                type="search"
+                placeholder="输入商品名称后回车或点击查询"
+                class="h-12 w-full rounded-xl border border-line bg-surface pl-10 pr-11 text-sm text-ink-900 outline-none transition-all duration-200 placeholder:text-ink-500 focus:border-brand-light/60 focus:shadow-[0_0_0_4px_rgba(240,185,141,0.16)] [&::-webkit-search-cancel-button]:hidden"
+                @input="onKeywordInput"
+              />
+              <button
+                v-if="query.keyword"
+                type="button"
+                class="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-ink-500 transition-colors hover:bg-brand-soft hover:text-brand-dark"
+                aria-label="清空搜索"
+                @click="query.keyword = ''; onClear()"
+              >
+                <X :size="15" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="submit" class="product-cta h-12" :disabled="loading">查询</button>
+            <button type="button" class="product-ghost h-12" @click="onReset">重置</button>
+            <div class="flex items-center gap-2 text-sm text-ink-500 sm:ml-2">
+              <label for="product-page-size" class="shrink-0 whitespace-nowrap">每页</label>
+              <select
+                id="product-page-size"
+                :value="pageSize"
+                class="h-12 rounded-xl border border-line bg-surface px-3 text-sm text-ink-900 outline-none transition-colors focus:border-brand-light/60 focus:shadow-[0_0_0_4px_rgba(240,185,141,0.16)]"
+                @change="onPageSizeChange"
+              >
+                <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+        <p class="mt-3 hidden text-xs leading-5 text-ink-500 sm:block">
+          输入即搜，停顿 300ms 后自动更新结果；也可回车或点击查询。
+        </p>
+      </section>
+
+      <div class="mt-5 flex flex-wrap items-center justify-between gap-3 sm:mt-6">
+        <p class="text-xs tracking-wide text-ink-500">
+          找到
+          <span class="num font-semibold text-brand-dark">{{ total }}</span>
+          件商品
+          <span v-if="query.keyword.trim()" class="ml-2 rounded-full bg-brand-soft px-2.5 py-1 font-medium text-brand-dark">
+            “{{ query.keyword.trim() }}”
+          </span>
+        </p>
+        <p class="hidden items-center gap-2 text-xs text-ink-500 sm:flex">
+          <span class="h-px w-8 bg-gradient-to-r from-brand/50 to-transparent" aria-hidden="true" />
+          点击卡片查看详情
         </p>
       </div>
-      <el-button plain :loading="loading" @click="refresh">
-        <RefreshCw :size="14" class="mr-1.5" aria-hidden="true" />
-        刷新
-      </el-button>
-    </header>
 
-    <section class="surface-card mt-6 p-4">
-      <form class="flex flex-wrap items-end gap-3" @submit.prevent="onSubmit">
-        <div class="w-full sm:w-80">
-          <label for="product-keyword" class="mb-1 block text-xs text-ink-500">商品关键字</label>
-          <el-input
-            id="product-keyword"
-            v-model="query.keyword"
-            placeholder="输入商品名称后回车或点击查询"
-            clearable
-            @input="onKeywordInput"
-            @clear="onClear"
-          >
-            <template #prefix>
-              <Search :size="15" aria-hidden="true" />
-            </template>
-          </el-input>
-        </div>
-
-        <el-button type="primary" native-type="submit" :loading="loading">查询</el-button>
-        <el-button @click="onReset">重置</el-button>
-
-        <div class="ml-auto flex items-center gap-2 text-sm text-ink-500">
-          <label for="product-page-size">每页</label>
-          <el-select
-            id="product-page-size"
-            :model-value="pageSize"
-            class="w-20"
-            @update:model-value="setPageSize"
-          >
-            <el-option v-for="size in pageSizes" :key="size" :label="String(size)" :value="size" />
-          </el-select>
-        </div>
-      </form>
-    </section>
-
-    <section class="mt-6">
-      <div v-if="loading && !items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <div v-for="index in 8" :key="index" class="surface-card overflow-hidden">
-          <SkeletonBlock class="aspect-square" rounded="sm" />
-          <div class="space-y-2 p-4">
-            <SkeletonBlock class="h-4 w-3/4" />
-            <SkeletonBlock class="h-3 w-1/2" />
-            <SkeletonBlock class="h-5 w-1/3" />
+      <section class="mt-4" :aria-busy="loading">
+        <div v-if="loading && !items.length" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div v-for="index in 8" :key="index" class="surface-card overflow-hidden">
+            <div class="product-stage aspect-[4/3] animate-pulse" />
+            <div class="space-y-3 p-5">
+              <div class="h-2.5 w-1/3 animate-pulse rounded-full bg-muted" />
+              <div class="h-4 w-3/4 animate-pulse rounded-full bg-line/70" />
+              <div class="h-3 w-1/2 animate-pulse rounded-full bg-muted" />
+              <div class="h-6 w-1/3 animate-pulse rounded-full bg-brand-soft" />
+            </div>
           </div>
         </div>
+
+        <EmptyState
+          v-else-if="error"
+          title="商品加载失败"
+          :description="error"
+          action-text="重新加载"
+          @action="refresh"
+        />
+
+        <EmptyState
+          v-else-if="!items.length"
+          title="没有找到匹配的商品"
+          description="换一个关键字，或清空筛选条件后再试。"
+          action-text="重置筛选"
+          @action="onReset"
+        />
+
+        <div v-else class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ProductCard v-for="product in items" :key="product.productId" :product="product" />
+        </div>
+      </section>
+
+      <div v-if="items.length" class="mt-10 flex justify-center">
+        <el-pagination
+          class="product-pagination"
+          background
+          layout="prev, pager, next"
+          :current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          @current-change="setPage"
+        />
       </div>
-
-      <EmptyState
-        v-else-if="error"
-        title="商品加载失败"
-        :description="error"
-        action-text="重新加载"
-        @action="refresh"
-      />
-
-      <EmptyState
-        v-else-if="!items.length"
-        title="没有找到匹配的商品"
-        description="换一个关键字，或清空筛选条件后再试。"
-        action-text="重置筛选"
-        @action="onReset"
-      />
-
-      <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <ProductCard v-for="product in items" :key="product.productId" :product="product" />
-      </div>
-    </section>
-
-    <div v-if="items.length" class="mt-8 flex justify-center">
-      <el-pagination
-        background
-        layout="prev, pager, next"
-        :current-page="page"
-        :page-size="pageSize"
-        :total="total"
-        @current-change="setPage"
-      />
     </div>
   </div>
 </template>

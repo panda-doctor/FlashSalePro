@@ -91,6 +91,77 @@ export async function createAndPreheatActivity(options?: {
   }
 }
 
+export interface CreatedProduct {
+  productId: string
+  name: string
+}
+
+/**
+ * 创建一件没有图片的在售商品，用于稳定覆盖「耳机示意图 + 配色示意」。
+ * 后端没有删除接口，商品会保留在目录中，因此名称带时间戳避免重复。
+ */
+export async function createProductWithoutImage(options?: {
+  totalStock?: number
+  priceCents?: number
+}): Promise<CreatedProduct> {
+  const name = `E2E示意图耳机-${Date.now()}`
+  const api = await ctx()
+  try {
+    const created = await unwrap<{ productId: string }>(
+      await api.post('/api/admin/products', {
+        headers: { 'X-Admin-Token': ADMIN_TOKEN },
+        data: {
+          name,
+          description: '无商品图时展示低饱和耳机示意图，配色仅用于预览。',
+          imageUrl: null,
+          originalPrice: options?.priceCents ?? 29900,
+          totalStock: options?.totalStock ?? 12,
+          status: 'ON_SHELF',
+        },
+      }),
+    )
+    return { productId: created.productId, name }
+  } finally {
+    await api.dispose()
+  }
+}
+
+interface AdminProductDetail {
+  productId: number | string
+  name: string
+  description: string | null
+  imageUrl: string | null
+  originalPrice: number
+  totalStock: number
+}
+
+/** 商品没有删除接口，用下架清理 E2E 造的数据，避免污染公开商品列表 */
+export async function deactivateProduct(productId: string): Promise<void> {
+  const api = await ctx()
+  try {
+    const headers = { 'X-Admin-Token': ADMIN_TOKEN }
+    const detail = await unwrap<AdminProductDetail>(
+      await api.get(`/api/admin/products/${productId}`, { headers }),
+    )
+    await unwrap<unknown>(
+      await api.post('/api/admin/products', {
+        headers,
+        data: {
+          productId: detail.productId,
+          name: detail.name,
+          description: detail.description,
+          imageUrl: detail.imageUrl,
+          originalPrice: detail.originalPrice,
+          totalStock: detail.totalStock,
+          status: 'OFF_SHELF',
+        },
+      }),
+    )
+  } finally {
+    await api.dispose()
+  }
+}
+
 /** 清理：活动没有删除接口，这里只做「重置库存」，避免残留脏库存不影响下一次运行 */
 export async function resetActivityStock(activityId: number): Promise<void> {
   const api = await ctx()

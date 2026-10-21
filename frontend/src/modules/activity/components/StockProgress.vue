@@ -26,11 +26,11 @@ const percent = computed(() => {
         <b class="num font-semibold text-ink-900">{{ sold }}</b>
         / {{ total }}
       </span>
-      <span class="num">{{ percent }}%</span>
+      <span class="num font-medium" :class="percent >= 100 ? 'text-danger' : 'text-brand'">{{ percent }}%</span>
     </div>
 
     <div
-      class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-line/60"
+      class="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted"
       role="progressbar"
       :aria-valuenow="percent"
       aria-valuemin="0"
@@ -39,7 +39,7 @@ const percent = computed(() => {
     >
       <div
         class="h-full rounded-full transition-all duration-500 ease-out"
-        :class="percent >= 100 ? 'bg-danger' : 'bg-brand'"
+        :class="percent >= 100 ? 'bg-danger' : 'bg-gradient-to-r from-[#FF8A5C] to-brand'"
         :style="{ width: `${percent}%` }"
       />
     </div>
