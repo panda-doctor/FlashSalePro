@@ -28,10 +28,10 @@ const text = computed(() => {
 <template>
   <span
     v-if="target !== null"
-    class="inline-flex items-center gap-1.5 rounded-full border border-brand/15 bg-brand-soft/70 px-2.5 py-1 text-[11px] text-brand-dark"
+    class="inline-flex items-center gap-1.5 rounded-full border border-flash/20 bg-flash-soft px-2.5 py-1 text-[11px] text-flash-dark"
   >
     <Timer :size="12" aria-hidden="true" />
     {{ prefix }}
-    <span class="num font-semibold tracking-wide">{{ text }}</span>
+    <span class="num font-semibold tracking-wide text-flash">{{ text }}</span>
   </span>
 </template>

@@ -150,7 +150,7 @@ onMounted(() => {
     <template v-else-if="overview">
       <section class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="surface-card relative overflow-hidden p-5">
-          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand/80 via-atelier-apricot/70 to-transparent" aria-hidden="true" />
+          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand/80 via-brand-light/70 to-transparent" aria-hidden="true" />
           <div class="flex items-center justify-between">
             <p class="text-xs text-ink-500">今日订单</p>
             <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand">
@@ -162,7 +162,7 @@ onMounted(() => {
         </div>
 
         <div class="surface-card relative overflow-hidden p-5">
-          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-atelier-gold/80 via-atelier-gold-light/70 to-transparent" aria-hidden="true" />
+          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-flash/80 via-flash/45 to-transparent" aria-hidden="true" />
           <div class="flex items-center justify-between">
             <p class="text-xs text-ink-500">今日成交额</p>
             <span class="grid h-9 w-9 place-items-center rounded-xl bg-warning/10 text-warning">
@@ -174,10 +174,10 @@ onMounted(() => {
         </div>
 
         <div class="surface-card relative overflow-hidden p-5">
-          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-atelier-apricot/80 via-atelier-peach/70 to-transparent" aria-hidden="true" />
+          <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-light/80 via-brand-soft/60 to-transparent" aria-hidden="true" />
           <div class="flex items-center justify-between">
             <p class="text-xs text-ink-500">成交用户</p>
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-atelier-sand/60 text-atelier-gold">
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand-dark">
               <Users :size="16" aria-hidden="true" />
             </span>
           </div>
@@ -245,9 +245,9 @@ onMounted(() => {
                   {{ item.orderCount }} 单 ｜ {{ formatPrice(item.gmv) }}
                 </span>
               </div>
-              <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-atelier-sand/70">
+              <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  class="h-full rounded-full bg-gradient-to-r from-atelier-apricot to-brand transition-all"
+                  class="h-full rounded-full bg-gradient-to-r from-brand-light to-brand transition-all"
                   :style="{ width: `${Math.max(6, (item.orderCount / maxTopOrders) * 100)}%` }"
                 />
               </div>

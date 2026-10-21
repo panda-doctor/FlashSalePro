@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const routes = ['/', '/products', '/activities', '/login', '/ai-support', '/admin']
 
-test.describe('Warm Atelier 粒子背景', () => {
+test.describe('Trust Light 粒子背景', () => {
   test('固定粒子层存在、不可聚焦且不拦截指针', async ({ page }) => {
     await page.goto('/')
 
@@ -23,8 +23,21 @@ test.describe('Warm Atelier 粒子背景', () => {
     expect(styles.position).toBe('fixed')
     expect(styles.pointerEvents).toBe('none')
     expect(styles.zIndex).toBe('0')
-    // 浅色主题下粒子层透明，奶白画布由 body 提供
+    // 浅色主题下粒子层透明，近白画布由 body 提供
     expect(styles.background).toBe('rgba(0, 0, 0, 0)')
+
+    // 冷色配色通过 CSS 变量集中暴露，便于整体换肤
+    const palette = await page.evaluate(() => {
+      const root = getComputedStyle(document.documentElement)
+      return {
+        toneA: root.getPropertyValue('--particle-tone-1').trim(),
+        toneB: root.getPropertyValue('--particle-tone-2').trim(),
+        glow: root.getPropertyValue('--particle-glow').trim(),
+      }
+    })
+    expect(palette.toneA).toBe('37, 99, 235')
+    expect(palette.toneB).toBe('99, 102, 241')
+    expect(palette.glow).toContain('rgba(29, 78, 216')
 
     const canvasBox = await field.locator('canvas').boundingBox()
     expect(canvasBox?.width ?? 0).toBeGreaterThan(0)

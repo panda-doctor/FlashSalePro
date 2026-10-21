@@ -18,6 +18,14 @@ test.describe('首页落地页', () => {
     }
 
     await expect(page.locator('#story')).toBeVisible()
+
+    // 能力展示区常驻，不依赖商品接口是否返回数据
+    const capabilities = page.getByTestId('capability-grid')
+    await expect(capabilities).toBeVisible()
+    await expect(capabilities.getByRole('link')).toHaveCount(4)
+
+    // 秒杀链路预览由活动接口阶段分布驱动
+    await expect(page.getByTestId('seckill-pipeline')).toBeVisible()
   })
 
   test('主 CTA 进入活动大厅，锚点进入品牌故事', async ({ page }) => {

@@ -46,7 +46,7 @@ function onLoad(event: Event): void {
     />
     <div
       v-else
-      class="flex h-full w-full flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_30%_20%,#FBF4EC,#F5E7DA)] text-ink-500"
+      class="flex h-full w-full flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_30%_20%,#F8FAFC,#EEF2F7)] text-ink-500"
     >
       <ImageOff :size="22" :stroke-width="1.5" aria-hidden="true" />
       <span class="text-[11px] tracking-wide">暂无图片</span>

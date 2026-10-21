@@ -13,7 +13,7 @@ import MembershipCta from '@/modules/home/components/MembershipCta.vue'
 
 const now = useNow(1000)
 const { products, loading: productsLoading, failed: productsFailed } = useCuratedProducts()
-const { activities, loading: activitiesLoading, failed: activitiesFailed } = useHomeActivities(now)
+const { activities, pipeline, loading: activitiesLoading, failed: activitiesFailed } = useHomeActivities(now)
 
 const spotlight = computed(() => activities.value[0] ?? null)
 
@@ -24,9 +24,15 @@ useScrollReveal()
   <div>
     <HeroSection :activity="spotlight" :loading="activitiesLoading" :failed="activitiesFailed" :now="now" />
     <CuratedCollection :products="products" :loading="productsLoading" :failed="productsFailed" />
-    <LiveSeckill :activities="activities" :loading="activitiesLoading" :failed="activitiesFailed" :now="now" />
-    <BrandStory :products="products" />
+    <LiveSeckill
+      :activities="activities"
+      :pipeline="pipeline"
+      :loading="activitiesLoading"
+      :failed="activitiesFailed"
+      :now="now"
+    />
     <ValuePillars />
+    <BrandStory :products="products" />
     <MembershipCta />
   </div>
 </template>

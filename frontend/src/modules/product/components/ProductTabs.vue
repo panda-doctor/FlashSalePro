@@ -114,7 +114,7 @@ function onKeydown(event: KeyboardEvent, index: number): void {
       </dl>
       <div class="mt-5 max-w-2xl">
         <div class="h-2 overflow-hidden rounded-full bg-muted">
-          <div class="h-full rounded-full bg-[linear-gradient(90deg,#c95b3f,#d9a15e)] transition-[width] duration-500" :style="{ width: `${ratio}%` }" />
+          <div class="h-full rounded-full bg-[linear-gradient(90deg,#1D4ED8,#60A5FA)] transition-[width] duration-500" :style="{ width: `${ratio}%` }" />
         </div>
         <p class="mt-2 text-xs leading-5 text-ink-500">
           可用库存占总库存的 {{ ratio }}%。该比例仅展示普通库存，秒杀库存以活动预热后的 Redis 值为准。

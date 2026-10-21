@@ -181,7 +181,7 @@ const stockToneClass = computed(() => {
                 <span class="num text-ink-500">{{ product.availableStock }} / {{ product.totalStock }}</span>
               </div>
               <div class="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                <div class="h-full rounded-full bg-[linear-gradient(90deg,#c95b3f,#d9a15e)] transition-[width] duration-500" :style="{ width: `${ratio}%` }" />
+                <div class="h-full rounded-full bg-[linear-gradient(90deg,#1D4ED8,#60A5FA)] transition-[width] duration-500" :style="{ width: `${ratio}%` }" />
               </div>
               <p class="mt-2.5 text-xs leading-5 text-ink-500">
                 普通可用库存占总库存的 {{ ratio }}%，秒杀库存以活动预热后的 Redis 值为准，两者不能相互换算。
@@ -189,7 +189,7 @@ const stockToneClass = computed(() => {
             </div>
 
             <div class="mt-7 flex flex-col gap-3 min-[600px]:flex-row">
-              <RouterLink v-if="hasActivities" :to="{ name: 'activities' }" class="product-cta w-full min-[600px]:w-auto">
+              <RouterLink v-if="hasActivities" :to="{ name: 'activities' }" class="product-cta product-cta--flash w-full min-[600px]:w-auto">
                 查看秒杀活动
                 <ArrowRight :size="16" aria-hidden="true" />
               </RouterLink>

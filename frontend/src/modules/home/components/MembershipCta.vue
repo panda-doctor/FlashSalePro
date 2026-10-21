@@ -46,16 +46,16 @@ const privileges = [
 <template>
   <section class="bg-transparent" aria-labelledby="membership-heading">
     <div class="page-container py-20 lg:py-28">
-      <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#8B2F1D] via-[#A34A31] to-[#B8543A] px-7 py-14 text-[#FFFBF5] sm:px-12 lg:px-16 lg:py-20">
+      <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#1E40AF] via-[#1D4ED8] to-[#2563EB] px-7 py-14 text-white sm:px-12 lg:px-16 lg:py-20">
         <div class="pointer-events-none absolute inset-0" aria-hidden="true">
           <div
             class="absolute -right-24 -top-24 h-[30rem] w-[30rem] rounded-full opacity-60 blur-[110px]"
-            style="background: radial-gradient(circle, rgba(255, 221, 200, 0.3), transparent 68%)"
+            style="background: radial-gradient(circle, rgba(191, 219, 254, 0.3), transparent 68%)"
           />
           <div
             class="absolute inset-0 opacity-20"
             style="
-              background-image: linear-gradient(rgba(255, 251, 245, 0.22) 1px, transparent 1px);
+              background-image: linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px);
               background-size: 100% 72px;
               mask-image: linear-gradient(to bottom, black, transparent 80%);
             "
@@ -64,41 +64,41 @@ const privileges = [
 
         <div class="relative grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <div>
-            <p class="text-[10px] uppercase tracking-[0.34em] text-[#F6D3B6]">Membership / 05</p>
+            <p class="text-[10px] uppercase tracking-[0.34em] text-[#BFDBFE]">Membership / 05</p>
             <h2
               id="membership-heading"
-              class="mt-5 font-display text-[26px] leading-snug text-[#FFFBF5] sm:text-4xl sm:leading-snug"
+              class="mt-5 font-display text-[26px] leading-snug text-white sm:text-4xl sm:leading-snug"
             >
               专属会籍，<br class="hidden sm:block" />
-              记录每一次<span class="italic text-[#F6D3B6]">郑重的选择</span>
+              记录每一次<span class="italic text-[#BFDBFE]">郑重的选择</span>
             </h2>
-            <p class="mt-6 max-w-md text-sm leading-8 text-[#FFFBF5]/85">
+            <p class="mt-6 max-w-md text-sm leading-8 text-white/85">
               这里的会籍不是付费墙，而是你的账户本身。登录之后，活动资格、订单归属与客服上下文都指向同一个人。
             </p>
 
             <div class="mt-9 flex flex-wrap items-center gap-4">
               <RouterLink
                 :to="primary.to"
-                class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FFFBF5] px-7 py-3 text-sm font-medium tracking-wide text-[#8B2F1D] shadow-[0_12px_28px_rgba(43,33,27,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_36px_rgba(43,33,27,0.3)] active:scale-[0.98]"
+                class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-medium tracking-wide text-[#1E40AF] shadow-[0_12px_28px_rgba(15,23,42,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#EFF6FF] hover:shadow-[0_18px_36px_rgba(15,23,42,0.3)] active:scale-[0.98]"
               >
                 {{ primary.label }}
                 <ArrowRight :size="16" aria-hidden="true" />
               </RouterLink>
               <RouterLink
                 :to="secondary.to"
-                class="inline-flex min-h-11 items-center gap-2 text-sm text-[#FFFBF5]/80 transition-colors duration-200 hover:text-[#FFFBF5]"
+                class="inline-flex min-h-11 items-center gap-2 text-sm text-white/80 transition-colors duration-200 hover:text-white"
               >
                 {{ secondary.label }}
                 <ArrowUpRight :size="14" aria-hidden="true" />
               </RouterLink>
             </div>
 
-            <p class="mt-8 text-[11px] leading-5 text-[#FFFBF5]/75">
+            <p class="mt-8 text-[11px] leading-5 text-white/75">
               不售卖会员等级，也不承诺额外权益；所有入口对应已上线的账户与业务模块。
             </p>
           </div>
 
-          <ul class="self-start rounded-2xl border border-white/50 bg-[#FFFBF5]/95 px-6 py-3 shadow-[0_20px_48px_rgba(43,33,27,0.22)] backdrop-blur-xl">
+          <ul class="self-start rounded-2xl border border-white/50 bg-white/95 px-6 py-3 shadow-[0_20px_48px_rgba(15,23,42,0.22)] backdrop-blur-xl">
             <li
               v-for="item in privileges"
               :key="item.title"

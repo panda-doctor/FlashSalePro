@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import ProductImage from '@/modules/product/components/ProductImage.vue'
+import ProductMedia from '@/modules/product/components/ProductMedia.vue'
 import CountdownText from '@/modules/activity/components/CountdownText.vue'
 import StockProgress from '@/modules/activity/components/StockProgress.vue'
 import type { ActivityItemVO } from '@/modules/activity/types'
 import { ACTIVITY_STATE_META, resolveActivityState } from '@/modules/activity/utils/activityPhase'
+import { PRODUCT_COLORWAYS } from '@/modules/product/utils/colorways'
 import { discountRate, formatPrice } from '@/shared/utils/money'
 
 const props = defineProps<{ activity: ActivityItemVO; now: number }>()
@@ -24,11 +25,15 @@ const state = computed(() =>
 )
 
 const meta = computed(() => ACTIVITY_STATE_META[state.value])
+/** 无商品图时用与商品卡一致的耳机示意图兜底，避免大块空白 */
+const colorway = computed(
+  () => PRODUCT_COLORWAYS[Math.abs(props.activity.productId) % PRODUCT_COLORWAYS.length],
+)
 const saving = computed(() => discountRate(props.activity.originalPrice, props.activity.seckillPrice))
 const cta = computed(() => (state.value === 'RUNNING' ? '立即抢购' : '查看详情'))
 
 const stateClass: Record<string, string> = {
-  RUNNING: 'border-brand bg-brand text-[#FFFBF5]',
+  RUNNING: 'border-flash bg-flash text-white',
   NOT_STARTED: 'border-warning/25 bg-warning/10 text-warning',
   NOT_PREHEATED: 'border-warning/25 bg-warning/10 text-warning',
   SOLD_OUT: 'border-danger/25 bg-danger/10 text-danger',
@@ -46,9 +51,11 @@ function open(): void {
     class="group flex flex-col overflow-hidden rounded-2xl border border-line/80 bg-surface shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/30 hover:shadow-lift"
   >
     <div class="relative aspect-[4/3] w-full overflow-hidden bg-atelier-sand/40">
-      <ProductImage
+      <ProductMedia
         :src="activity.productImage"
         :alt="activity.productName || activity.activityName"
+        :colorway="colorway"
+        fit="cover"
         class="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.04]"
       />
       <div class="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-900/15 to-transparent" aria-hidden="true" />
@@ -101,7 +108,7 @@ function open(): void {
         <el-button
           round
           size="small"
-          :type="state === 'RUNNING' ? 'primary' : 'default'"
+          :type="state === 'RUNNING' ? 'danger' : 'default'"
           @click="open"
         >
           {{ cta }}

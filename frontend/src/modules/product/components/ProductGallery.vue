@@ -74,7 +74,7 @@ function onUsingArt(value: boolean): void {
           class="grid h-16 w-16 shrink-0 place-items-center rounded-xl border bg-surface p-1.5 transition-all duration-200"
           :class="
             colorway.id === item.id
-              ? 'border-brand shadow-[0_0_0_3px_rgba(240,185,141,0.18)]'
+              ? 'border-brand shadow-[0_0_0_3px_rgba(29,78,216,0.18)]'
               : 'border-line hover:border-brand/35'
           "
           :aria-label="`切换到${item.label}配色预览`"
@@ -87,7 +87,7 @@ function onUsingArt(value: boolean): void {
 
       <div
         v-else-if="product.imageUrl"
-        class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-brand bg-surface p-1 shadow-[0_0_0_3px_rgba(240,185,141,0.18)]"
+        class="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-brand bg-surface p-1 shadow-[0_0_0_3px_rgba(29,78,216,0.18)]"
         aria-hidden="true"
       >
         <img :src="product.imageUrl" :alt="product.name" class="h-full w-full rounded-lg object-cover" />

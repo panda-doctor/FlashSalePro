@@ -9,7 +9,10 @@ test.describe('商品', () => {
     const cards = page.locator('a[href^="/products/"]')
     await expect(cards.first()).toBeVisible()
     const initialCount = await cards.count()
-    expect(initialCount).toBeGreaterThan(0)
+    // 固定每页 4 件，页大小下拉已移除
+    expect(initialCount).toBe(4)
+    await expect(page.locator('#product-page-size')).toHaveCount(0)
+    await expect(page.getByRole('navigation', { name: '商品分页' })).toContainText('第 1–4 件')
 
     // 输入即搜：防抖 300ms 后应只剩键盘相关商品
     await page.getByPlaceholder('输入商品名称后回车或点击查询').fill('键盘')
@@ -22,6 +25,34 @@ test.describe('商品', () => {
     await expect(page).toHaveURL(/\/products\/\d+/)
     await expect(page.getByRole('heading', { name: /键盘/ }).first()).toBeVisible()
     await expect(page.getByText('商品描述')).toBeVisible()
+  })
+
+  test('固定每页 4 件，翻页更新区间并回到目录顶部', async ({ page }) => {
+    await page.goto('/products')
+
+    const cards = page.locator('a[href^="/products/"]')
+    await expect(cards.first()).toBeVisible()
+    expect(await cards.count()).toBe(4)
+
+    const firstHref = await cards.first().getAttribute('href')
+    const pager = page.getByRole('navigation', { name: '商品分页' })
+    await pager.locator('.el-pager li').nth(1).click()
+
+    await expect(pager).toContainText('第 5–8 件')
+    await expect(cards.first()).not.toHaveAttribute('href', firstHref ?? '')
+    expect(await cards.count()).toBe(4)
+
+    const scrollY = await page.evaluate(() => window.scrollY)
+    expect(scrollY).toBeGreaterThan(200)
+
+    // 末页不足 4 件时卡片自动放大铺满整行，右侧不留空列
+    await pager.locator('.el-pager li').last().click()
+    await expect(pager).toContainText('第 9–10 件')
+    await expect(cards).toHaveCount(2)
+    const columns = await page
+      .locator('main .grid.gap-5')
+      .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
+    expect(columns).toBe(2)
   })
 
   test('搜索无结果展示空态', async ({ page }) => {
@@ -39,12 +70,12 @@ test.describe('商品', () => {
     await expect(page.getByRole('link', { name: '商品', exact: true })).toHaveAttribute('aria-current', 'page')
     await expect(page.getByText('Warm drops, precise execution.')).toBeVisible()
 
-    // 顶部搜索框沿用全站暖灰边框
+    // 顶部搜索框沿用全站冷灰边框
     const searchBorder = await page
       .locator('#global-search')
       .locator('..')
       .evaluate((el) => getComputedStyle(el).borderTopColor)
-    expect(searchBorder).toBe('rgb(234, 223, 213)')
+    expect(searchBorder).toBe('rgb(228, 233, 240)')
 
     // 商品页底色透出 canvas 与粒子层，不再铺不透明亮底
     const pageBackground = await page
@@ -53,7 +84,7 @@ test.describe('商品', () => {
     expect(pageBackground).toBe('rgba(0, 0, 0, 0)')
 
     const bodyBackground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
-    expect(bodyBackground).toBe('rgb(250, 246, 241)')
+    expect(bodyBackground).toBe('rgb(251, 252, 253)')
   })
 
   test('详情标签页支持点击与方向键切换', async ({ page }) => {
@@ -127,7 +158,7 @@ test.describe('商品', () => {
           .locator('main .grid.gap-5')
           .first()
           .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
-        const expected = width >= 1280 ? 4 : width >= 1024 ? 3 : width >= 640 ? 2 : 1
+        const expected = width >= 1024 ? 4 : width >= 640 ? 2 : 1
         expect(columns, `${width}px 商品网格列数`).toBe(expected)
 
         await page.goto(`/products/${product.productId}`)

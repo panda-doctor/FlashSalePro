@@ -55,15 +55,15 @@ function exitAdmin(): void {
   <div class="relative isolate min-h-screen bg-transparent">
     <ParticleField />
 
-    <aside class="fixed inset-y-0 left-0 z-40 hidden w-[232px] flex-col overflow-hidden border-r border-line/70 bg-[#FFFDFA] text-ink-700 lg:flex">
+    <aside class="fixed inset-y-0 left-0 z-40 hidden w-[232px] flex-col overflow-hidden border-r border-line/70 bg-surface text-ink-700 lg:flex">
       <div
         class="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full opacity-60 blur-[80px]"
-        style="background: radial-gradient(circle, rgba(184, 84, 58, 0.16), transparent 68%)"
+        style="background: radial-gradient(circle, rgba(29, 78, 216, 0.14), transparent 68%)"
         aria-hidden="true"
       />
 
       <RouterLink :to="{ name: 'home' }" class="relative flex items-center gap-3 px-5 py-5 text-ink-900">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand text-[#FFFBF5] shadow-[0_8px_20px_rgba(184,84,58,0.24)]">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white shadow-[0_8px_20px_rgba(29,78,216,0.24)]">
           <LayoutDashboard :size="16" aria-hidden="true" />
         </span>
         <span class="flex flex-col leading-tight">
@@ -125,7 +125,7 @@ function exitAdmin(): void {
           <div class="ml-auto flex items-center gap-2">
             <span
               class="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:inline-flex"
-              :class="adminToken.verifiedAt > 0 ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'"
+              :class="adminToken.verifiedAt > 0 ? 'bg-success/10 text-success' : 'bg-muted text-ink-700'"
             >
               <span class="h-1.5 w-1.5 rounded-full bg-current" />
               {{ adminToken.verifiedAt > 0 ? '令牌已校验' : '令牌未校验' }}
@@ -151,7 +151,7 @@ function exitAdmin(): void {
     >
       <div class="flex min-h-[calc(100vh-40px)] flex-col">
         <div class="flex items-center gap-3 border-b border-line/70 pb-5">
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand text-[#FFFBF5]">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white">
             <LayoutDashboard :size="16" aria-hidden="true" />
           </span>
           <span class="flex flex-col leading-tight">

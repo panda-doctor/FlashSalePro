@@ -6,7 +6,7 @@ import ChatPanel from '@/modules/ai/components/ChatPanel.vue'
 <template>
   <div class="pb-16">
     <section
-      class="relative isolate overflow-hidden bg-gradient-to-br from-[#FBF0E6] via-[#F8EADD] to-[#FAF6F1] text-ink-900"
+      class="relative isolate overflow-hidden bg-gradient-to-br from-[#F1F5F9] via-[#F8FAFC] to-white text-ink-900"
       aria-label="AI 客服横幅"
     >
       <div
@@ -14,12 +14,12 @@ import ChatPanel from '@/modules/ai/components/ChatPanel.vue'
         aria-hidden="true"
       />
       <div
-        class="pointer-events-none absolute -bottom-40 right-[-6rem] h-80 w-80 rounded-full bg-[#FFB266]/20 blur-[110px]"
+        class="pointer-events-none absolute -bottom-40 right-[-6rem] h-80 w-80 rounded-full bg-[#BFDBFE]/35 blur-[110px]"
         aria-hidden="true"
       />
       <div
         class="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style="background-image: radial-gradient(rgba(184, 132, 102, 0.38) 1px, transparent 1px); background-size: 22px 22px"
+        style="background-image: radial-gradient(rgba(15, 23, 42, 0.28) 1px, transparent 1px); background-size: 22px 22px"
         aria-hidden="true"
       />
       <div class="page-container relative py-10 sm:py-12">
@@ -102,7 +102,7 @@ import ChatPanel from '@/modules/ai/components/ChatPanel.vue'
             </ul>
           </section>
 
-          <section class="rounded-2xl border border-brand/20 bg-gradient-to-br from-brand-soft via-[#FBEFE7] to-surface p-5">
+          <section class="rounded-2xl border border-brand/20 bg-gradient-to-br from-brand-soft via-[#DBEAFE] to-surface p-5">
             <div class="flex items-start gap-3">
               <span class="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-dark shadow-sm">
                 <Bot :size="16" aria-hidden="true" />

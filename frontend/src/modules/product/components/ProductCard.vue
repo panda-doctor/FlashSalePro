@@ -79,7 +79,7 @@ const stockClass = computed(() => {
             {{ formatPrice(product.originalPrice) }}
           </p>
         </div>
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-ink-500 transition-all duration-200 group-hover:border-brand group-hover:bg-brand group-hover:text-[#FFFBF5]">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-ink-500 transition-all duration-200 group-hover:border-brand group-hover:bg-brand group-hover:text-white">
           <ArrowUpRight :size="16" aria-hidden="true" />
         </span>
       </div>

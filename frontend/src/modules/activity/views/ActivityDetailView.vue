@@ -56,7 +56,7 @@ const discount = computed(() =>
 )
 
 const stateClass = computed(() => {
-  if (state.value === 'RUNNING') return 'border-brand bg-brand text-[#FFFBF5]'
+  if (state.value === 'RUNNING') return 'border-flash bg-flash text-white'
   if (state.value === 'NOT_STARTED' || state.value === 'NOT_PREHEATED') {
     return 'border-warning/25 bg-warning/10 text-warning'
   }

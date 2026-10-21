@@ -10,9 +10,9 @@ useParticleField(canvas)
 <template>
   <div class="particle-field" aria-hidden="true">
     <div class="particle-aurora" />
-    <div class="particle-orb particle-orb--peach" />
-    <div class="particle-orb particle-orb--sand" />
-    <div class="particle-orb particle-orb--ember" />
+    <div class="particle-orb particle-orb--azure" />
+    <div class="particle-orb particle-orb--indigo" />
+    <div class="particle-orb particle-orb--sky" />
     <canvas ref="canvas" class="particle-canvas" />
     <div class="particle-vignette" />
     <div class="particle-noise" />
@@ -20,7 +20,7 @@ useParticleField(canvas)
 </template>
 
 <style scoped>
-/* 浅色暖调粒子层：底色透明，奶白画布与暖阳由 body 与 aurora 提供 */
+/* 信任浅色粒子层：底色透明，近白画布与冷色极光由 body 与 aurora 提供 */
 .particle-field {
   position: fixed;
   inset: 0;
@@ -35,8 +35,8 @@ useParticleField(canvas)
   inset: -20% 0 auto;
   height: 80vh;
   background:
-    radial-gradient(ellipse 46% 42% at 50% 0%, rgba(217, 138, 106, 0.14), transparent 70%),
-    radial-gradient(ellipse 36% 34% at 52% 8%, rgba(240, 205, 184, 0.18), transparent 72%);
+    radial-gradient(ellipse 46% 42% at 50% 0%, rgba(29, 78, 216, 0.1), transparent 70%),
+    radial-gradient(ellipse 36% 34% at 52% 8%, rgba(99, 102, 241, 0.1), transparent 72%);
 }
 
 .particle-canvas {
@@ -54,42 +54,42 @@ useParticleField(canvas)
   will-change: transform;
 }
 
-.particle-orb--peach {
+.particle-orb--azure {
   top: 8%;
   left: 12%;
   width: 38vw;
   height: 38vw;
-  background: #f2c6a0;
-  animation: warm-drift-peach 68s ease-in-out infinite alternate;
+  background: #dbeafe;
+  animation: cool-drift-azure 68s ease-in-out infinite alternate;
 }
 
-.particle-orb--sand {
+.particle-orb--indigo {
   top: 28%;
   right: 2%;
   width: 34vw;
   height: 34vw;
-  background: #ead7c3;
+  background: #e0e7ff;
   opacity: 0.11;
-  animation: warm-drift-sand 82s ease-in-out infinite alternate;
+  animation: cool-drift-indigo 82s ease-in-out infinite alternate;
 }
 
-.particle-orb--ember {
+.particle-orb--sky {
   bottom: -14%;
   left: 30%;
   width: 36vw;
   height: 36vw;
-  background: #d98a6a;
+  background: #bfdbfe;
   opacity: 0.1;
-  animation: warm-drift-ember 74s ease-in-out infinite alternate;
+  animation: cool-drift-sky 74s ease-in-out infinite alternate;
 }
 
-/* 用奶白柔化四周，避免浅底出现脏灰边缘 */
+/* 用纯白柔化四周，避免浅底出现脏灰边缘 */
 .particle-vignette {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 50% 28%, transparent 38%, rgba(250, 246, 241, 0.55) 100%),
-    linear-gradient(180deg, rgba(250, 246, 241, 0.32) 0%, transparent 24%, transparent 76%, rgba(250, 246, 241, 0.46) 100%);
+    radial-gradient(ellipse at 50% 28%, transparent 38%, rgba(251, 252, 253, 0.55) 100%),
+    linear-gradient(180deg, rgba(251, 252, 253, 0.32) 0%, transparent 24%, transparent 76%, rgba(251, 252, 253, 0.46) 100%);
 }
 
 .particle-noise {
@@ -101,7 +101,7 @@ useParticleField(canvas)
   mix-blend-mode: multiply;
 }
 
-@keyframes warm-drift-peach {
+@keyframes cool-drift-azure {
   from {
     transform: translate3d(-4%, -3%, 0) scale(1);
   }
@@ -110,7 +110,7 @@ useParticleField(canvas)
   }
 }
 
-@keyframes warm-drift-sand {
+@keyframes cool-drift-indigo {
   from {
     transform: translate3d(3%, 4%, 0) scale(1.05);
   }
@@ -119,7 +119,7 @@ useParticleField(canvas)
   }
 }
 
-@keyframes warm-drift-ember {
+@keyframes cool-drift-sky {
   from {
     transform: translate3d(-5%, 2%, 0) scale(1);
   }
@@ -134,7 +134,7 @@ useParticleField(canvas)
     opacity: 0.1;
   }
 
-  .particle-orb--ember {
+  .particle-orb--sky {
     display: none;
   }
 }

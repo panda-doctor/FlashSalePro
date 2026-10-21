@@ -45,15 +45,6 @@ const curation = [
     icon: Bot,
   },
 ]
-
-function cardClass(index: number): string {
-  if (index === 0) {
-    return 'min-h-[22rem] sm:min-h-[18rem] lg:col-span-2 lg:row-span-2 lg:min-h-[31rem]'
-  }
-  return index === 1
-    ? 'min-h-[15rem] sm:min-h-[18rem] lg:col-span-2 lg:min-h-[15rem]'
-    : 'min-h-[15rem] sm:min-h-[18rem]'
-}
 </script>
 
 <template>
@@ -79,8 +70,39 @@ function cardClass(index: number): string {
         </RouterLink>
       </div>
 
-      <div v-if="loading" class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2" aria-hidden="true">
-        <div v-for="index in 4" :key="index" class="overflow-hidden rounded-2xl bg-atelier-sand/60" :class="cardClass(index - 1)">
+      <ul class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="capability-grid">
+        <li v-for="item in curation" :key="item.name">
+          <RouterLink
+            :to="{ name: item.route }"
+            class="group flex h-full flex-col justify-between gap-5 rounded-2xl border border-line bg-surface p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/35 hover:shadow-card"
+          >
+            <span class="flex items-start justify-between gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl border border-brand/15 bg-brand-soft text-brand">
+                <component :is="item.icon" :size="18" :stroke-width="1.7" aria-hidden="true" />
+              </span>
+              <ArrowUpRight
+                :size="15"
+                class="mt-1 text-ink-300 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand"
+                aria-hidden="true"
+              />
+            </span>
+            <span class="block">
+              <span class="block text-sm font-semibold text-ink-900">{{ item.title }}</span>
+              <span class="mt-1.5 block text-xs leading-6 text-ink-500">{{ item.note }}</span>
+              <span class="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-brand-dark">
+                {{ item.action }}
+              </span>
+            </span>
+          </RouterLink>
+        </li>
+      </ul>
+
+      <div v-if="loading" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+        <div
+          v-for="index in 4"
+          :key="index"
+          class="aspect-[4/5] overflow-hidden rounded-2xl border border-line bg-muted/60"
+        >
           <div class="flex h-full flex-col justify-end gap-3 p-6">
             <div class="h-3 w-24 animate-pulse rounded-full bg-ink-900/10" />
             <div class="h-5 w-2/3 animate-pulse rounded-lg bg-ink-900/10" />
@@ -88,38 +110,12 @@ function cardClass(index: number): string {
         </div>
       </div>
 
-      <div
-        v-else-if="!products.length"
-        class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2"
-      >
-        <RouterLink
-          v-for="(item, index) in curation"
-          :key="item.name"
-          :to="{ name: item.route }"
-          class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-line bg-surface/70 p-7 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/35 hover:bg-surface"
-          :class="cardClass(index)"
-        >
-          <span class="grid h-11 w-11 place-items-center rounded-full border border-line bg-brand-soft/60 text-brand">
-            <component :is="item.icon" :size="19" :stroke-width="1.6" aria-hidden="true" />
-          </span>
-          <span class="mt-10 block">
-            <span class="block font-display text-2xl text-atelier-ink">{{ item.title }}</span>
-            <span class="mt-3 block max-w-sm text-sm leading-7 text-ink-500">{{ item.note }}</span>
-            <span class="mt-6 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-brand-dark">
-              {{ item.action }}
-              <ArrowUpRight :size="14" aria-hidden="true" />
-            </span>
-          </span>
-        </RouterLink>
-      </div>
-
-      <div v-else class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2">
+      <div v-else-if="products.length" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RouterLink
           v-for="(product, index) in products"
           :key="product.id"
           :to="{ name: 'product-detail', params: { id: product.id } }"
-          class="group relative isolate overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/30 hover:shadow-lift focus-visible:-translate-y-1"
-          :class="cardClass(index)"
+          class="group relative isolate aspect-[4/5] overflow-hidden rounded-2xl border border-line bg-surface shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/30 hover:shadow-lift focus-visible:-translate-y-1"
           :aria-label="`查看商品 ${product.name}`"
         >
           <div class="absolute inset-0 overflow-hidden">
@@ -134,16 +130,16 @@ function cardClass(index: number): string {
           <div class="glass-panel glass-sheen absolute inset-x-3 bottom-3 rounded-xl bg-surface/92 px-4 py-3.5">
             <div class="flex items-end justify-between gap-3">
               <div class="min-w-0">
-                <p class="truncate text-sm text-atelier-ink">{{ product.name }}</p>
+                <p class="truncate text-sm text-ink-900">{{ product.name }}</p>
                 <p class="mt-1 text-[11px] tracking-wide text-ink-500">{{ product.stockLabel }}</p>
               </div>
-              <span class="num shrink-0 text-[15px] text-atelier-ink">{{ formatPrice(product.price) }}</span>
+              <span class="num shrink-0 text-[15px] font-semibold text-price">{{ formatPrice(product.price) }}</span>
             </div>
           </div>
 
           <span
             v-if="index === 0"
-            class="absolute left-4 top-4 rounded-full border border-white/40 bg-brand px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[#FFFBF5] shadow-sm"
+            class="absolute left-4 top-4 rounded-full border border-white/40 bg-brand px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white shadow-sm"
           >
             Selected
           </span>

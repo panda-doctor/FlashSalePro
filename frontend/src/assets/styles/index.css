@@ -4,83 +4,90 @@
 
 @layer base {
   :root {
-    --nocturne-canvas: #faf6f1;
+    --nocturne-canvas: #fbfcfd;
     --nocturne-surface: #ffffff;
-    --nocturne-muted: #f5ede6;
-    --nocturne-line: #eadfd5;
-    --nocturne-hairline: rgba(184, 132, 102, 0.18);
-    --nocturne-ink: #2b211b;
-    --nocturne-ink-soft: #4a3b32;
-    --nocturne-ink-muted: #6e5c51;
-    --nocturne-brand: #b8543a;
-    --nocturne-brand-dark: #963d26;
-    --nocturne-brand-light: #e8a87c;
-    --nocturne-gold: #9c6b2f;
+    --nocturne-muted: #f1f5f9;
+    --nocturne-line: #e4e9f0;
+    --nocturne-hairline: rgba(15, 23, 42, 0.08);
+    --nocturne-ink: #0f172a;
+    --nocturne-ink-soft: #334155;
+    --nocturne-ink-muted: #5b6b7f;
+    --nocturne-brand: #1d4ed8;
+    --nocturne-brand-dark: #1e40af;
+    --nocturne-brand-light: #93c5fd;
+    --nocturne-gold: #3b82f6;
+    --nocturne-flash: #dc2626;
+    --nocturne-flash-dark: #b91c1c;
+
+    /* 动态粒子层配色入口：后续换肤只需覆盖这两个色值 */
+    --particle-tone-1: 37, 99, 235;
+    --particle-tone-2: 99, 102, 241;
+    --particle-glow: rgba(29, 78, 216, 0.06);
   }
 
-  /* Element Plus 样式按需注入，晚于本文件；双 :root 提升优先级以继承浅色暖调令牌 */
+  /* Element Plus 样式按需注入，晚于本文件；双 :root 提升优先级以继承浅色信任令牌 */
   :root:root {
-    --el-color-primary: #b8543a;
-    --el-color-primary-light-3: #c4664e;
-    --el-color-primary-light-5: #d0816c;
-    --el-color-primary-light-7: #e4b3a4;
-    --el-color-primary-light-8: #fbeee9;
-    --el-color-primary-light-9: #fdf6f2;
-    --el-color-primary-dark-2: #963d26;
-    --el-color-success: #2f7d5a;
-    --el-color-success-light-3: #4f9474;
-    --el-color-success-light-5: #74ac91;
-    --el-color-success-light-7: #a6cbb9;
-    --el-color-success-light-8: #e6f3ed;
-    --el-color-success-light-9: #f0f8f5;
-    --el-color-warning: #8f5a0f;
-    --el-color-warning-light-3: #a06c22;
-    --el-color-warning-light-5: #b58543;
-    --el-color-warning-light-7: #d3b58c;
-    --el-color-warning-light-8: #fbf1e3;
-    --el-color-warning-light-9: #fdf7ee;
-    --el-color-danger: #b23a32;
-    --el-color-danger-light-3: #c15750;
-    --el-color-danger-light-5: #ce7872;
-    --el-color-danger-light-7: #e3b0ac;
-    --el-color-danger-light-8: #f9e9e7;
-    --el-color-danger-light-9: #fcf2f1;
-    --el-color-error: #b23a32;
-    --el-color-info: #6e5c51;
-    --el-color-info-light-3: #8c7c70;
-    --el-color-info-light-5: #a99b90;
-    --el-color-info-light-7: #c9bdb3;
-    --el-color-info-light-8: #ece4dd;
-    --el-color-info-light-9: #f5ede6;
-    --el-text-color-primary: #2b211b;
-    --el-text-color-regular: #4a3b32;
-    --el-text-color-secondary: #6e5c51;
-    --el-text-color-placeholder: #a0907f;
-    --el-text-color-disabled: #bfb0a3;
-    --el-border-color: #eadfd5;
-    --el-border-color-light: #f0e7de;
-    --el-border-color-lighter: #f4ece4;
-    --el-border-color-extra-light: #f8f2ec;
-    --el-border-color-dark: #dccbbc;
-    --el-border-color-darker: #cbb5a3;
-    --el-fill-color: #f5ede6;
-    --el-fill-color-light: #f8f2ec;
-    --el-fill-color-lighter: #fbf7f2;
-    --el-fill-color-extra-light: #fdfaf7;
+    --el-color-primary: #1d4ed8;
+    --el-color-primary-light-3: #4f74e0;
+    --el-color-primary-light-5: #7f99e8;
+    --el-color-primary-light-7: #b3c5f2;
+    --el-color-primary-light-8: #dbe5fb;
+    --el-color-primary-light-9: #eff6ff;
+    --el-color-primary-dark-2: #1e40af;
+    --el-color-success: #047857;
+    --el-color-success-light-3: #2f9270;
+    --el-color-success-light-5: #63ab8f;
+    --el-color-success-light-7: #9dc9b8;
+    --el-color-success-light-8: #e3f3ed;
+    --el-color-success-light-9: #f0f9f5;
+    --el-color-warning: #b45309;
+    --el-color-warning-light-3: #c06d22;
+    --el-color-warning-light-5: #cf8c4a;
+    --el-color-warning-light-7: #e2b992;
+    --el-color-warning-light-8: #fbeee1;
+    --el-color-warning-light-9: #fdf6ed;
+    --el-color-danger: #dc2626;
+    --el-color-danger-light-3: #e25050;
+    --el-color-danger-light-5: #e87b7b;
+    --el-color-danger-light-7: #f2b3b3;
+    --el-color-danger-light-8: #fde8e8;
+    --el-color-danger-light-9: #fef2f2;
+    --el-color-error: #dc2626;
+    --el-color-info: #5b6b7f;
+    --el-color-info-light-3: #7c8a9b;
+    --el-color-info-light-5: #9daab8;
+    --el-color-info-light-7: #c3ccd6;
+    --el-color-info-light-8: #e8edf2;
+    --el-color-info-light-9: #f1f5f9;
+    --el-text-color-primary: #0f172a;
+    --el-text-color-regular: #334155;
+    --el-text-color-secondary: #5b6b7f;
+    --el-text-color-placeholder: #64748b;
+    --el-text-color-disabled: #b6c0cc;
+    --el-border-color: #e4e9f0;
+    --el-border-color-light: #eaeef4;
+    --el-border-color-lighter: #eff3f7;
+    --el-border-color-extra-light: #f4f7fa;
+    --el-border-color-dark: #d3dae4;
+    --el-border-color-darker: #bfc9d6;
+    --el-fill-color: #f1f5f9;
+    --el-fill-color-light: #f5f8fb;
+    --el-fill-color-lighter: #f8fafc;
+    --el-fill-color-extra-light: #fbfcfd;
     --el-fill-color-blank: #ffffff;
     --el-bg-color: #ffffff;
     --el-bg-color-overlay: #ffffff;
-    --el-bg-color-page: #faf6f1;
-    --el-mask-color: rgba(43, 33, 27, 0.45);
-    --el-mask-color-extra-light: rgba(43, 33, 27, 0.22);
-    --el-overlay-color: rgba(43, 33, 27, 0.5);
-    --el-overlay-color-lighter: rgba(43, 33, 27, 0.3);
-    --el-box-shadow-light: 0 8px 24px rgba(120, 72, 48, 0.12);
-    --el-box-shadow: 0 18px 48px rgba(120, 72, 48, 0.16);
-    --el-box-shadow-dark: 0 24px 60px rgba(120, 72, 48, 0.2);
-    --el-disabled-bg-color: #f5ede6;
-    --el-disabled-text-color: #a0907f;
-    --el-disabled-border-color: #eadfd5;
+    --el-bg-color-page: #fbfcfd;
+    --el-mask-color: rgba(15, 23, 42, 0.45);
+    --el-mask-color-extra-light: rgba(15, 23, 42, 0.22);
+    --el-overlay-color: rgba(15, 23, 42, 0.5);
+    --el-overlay-color-lighter: rgba(15, 23, 42, 0.3);
+    --el-box-shadow-light: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --el-box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+    --el-box-shadow-dark: 0 24px 60px rgba(15, 23, 42, 0.16);
+    --el-disabled-bg-color: #f1f5f9;
+    --el-disabled-text-color: #94a3b8;
+    --el-disabled-border-color: #e4e9f0;
     --el-border-radius-base: 12px;
     --el-border-radius-small: 8px;
     --el-border-radius-round: 999px;
@@ -105,7 +112,7 @@
     line-height: 1.7;
     background-image: radial-gradient(
       ellipse at 50% -10%,
-      rgba(217, 138, 106, 0.1),
+      rgba(29, 78, 216, 0.07),
       transparent 58%
     );
     background-attachment: fixed;
@@ -127,11 +134,11 @@
   :focus-visible {
     outline: 2px solid var(--nocturne-brand);
     outline-offset: 2px;
-    box-shadow: 0 0 0 5px rgba(184, 84, 58, 0.16);
+    box-shadow: 0 0 0 5px rgba(29, 78, 216, 0.16);
   }
 
   ::selection {
-    background: rgba(184, 84, 58, 0.18);
+    background: rgba(29, 78, 216, 0.14);
     color: var(--nocturne-ink);
   }
 
@@ -145,14 +152,14 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #e0d0c2;
+    background: #cfd8e3;
     border: 3px solid transparent;
     background-clip: content-box;
     border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #cbb5a3;
+    background: #b3bfcd;
     background-clip: content-box;
   }
 }
@@ -212,13 +219,13 @@
     @apply bg-brand-soft font-medium text-brand-dark;
   }
 
-  /* ---- Warm Atelier 浅色玻璃：信息层用白卡磨砂，不叠加超过两层 ---- */
+  /* ---- Trust Light 浅色玻璃：信息层用白卡磨砂，不叠加超过两层 ---- */
   .glass-panel {
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid var(--nocturne-hairline);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 20px 48px rgba(120, 72, 48, 0.1);
+      0 20px 48px rgba(15, 23, 42, 0.1);
     backdrop-filter: blur(18px) saturate(130%);
     -webkit-backdrop-filter: blur(18px) saturate(130%);
   }
@@ -226,10 +233,10 @@
   /* 历史类名：浅色主题下表示「强调玻璃」，保持高不透明度以承载密集信息 */
   .glass-dark {
     background: rgba(255, 255, 255, 0.88);
-    border: 1px solid rgba(184, 132, 102, 0.16);
+    border: 1px solid rgba(15, 23, 42, 0.07);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      0 26px 64px rgba(120, 72, 48, 0.12);
+      0 26px 64px rgba(15, 23, 42, 0.12);
     backdrop-filter: blur(22px) saturate(125%);
     -webkit-backdrop-filter: blur(22px) saturate(125%);
   }
@@ -260,7 +267,7 @@
       105deg,
       transparent 32%,
       rgba(255, 255, 255, 0.65) 48%,
-      rgba(240, 205, 184, 0.5) 54%,
+      rgba(191, 219, 254, 0.5) 54%,
       transparent 68%
     );
     transform: translateX(-125%);
@@ -274,30 +281,54 @@
 
   .luxury-cta {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-all;
-    color: #fffbf5;
-    background: linear-gradient(135deg, #b8543a 0%, #963d26 100%);
+    color: #ffffff;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      0 12px 28px rgba(184, 84, 58, 0.26);
+      0 12px 28px rgba(29, 78, 216, 0.24);
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--ease-out-luxe);
   }
 
   .luxury-cta:hover {
     transform: translateY(-2px);
-    background: linear-gradient(135deg, #a94a32 0%, #8b2f1d 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #1a3691 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      0 18px 38px rgba(184, 84, 58, 0.34);
+      0 18px 38px rgba(29, 78, 216, 0.32);
   }
 
   .luxury-cta:active {
     transform: scale(0.98);
   }
 
+  /* 交易强调按钮：仅用于抢购 / 立即秒杀 */
+  .flash-cta {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-all;
+    color: #ffffff;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 12px 28px rgba(220, 38, 38, 0.24);
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-out-luxe);
+  }
+
+  .flash-cta:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 18px 38px rgba(220, 38, 38, 0.32);
+  }
+
+  .flash-cta:active {
+    transform: scale(0.98);
+  }
+
   .luxury-ghost {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-7 py-3 text-sm font-medium tracking-wide transition-all;
-    border-color: rgba(120, 72, 48, 0.18);
+    border-color: rgba(15, 23, 42, 0.12);
     color: var(--nocturne-ink-soft);
     background: rgba(255, 255, 255, 0.72);
     transition-duration: var(--motion-fast);
@@ -305,7 +336,7 @@
   }
 
   .luxury-ghost:hover {
-    border-color: rgba(184, 84, 58, 0.45);
+    border-color: rgba(29, 78, 216, 0.45);
     color: var(--nocturne-brand-dark);
     background: #ffffff;
     transform: translateY(-2px);
@@ -313,7 +344,7 @@
 
   .luxury-outline {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-7 py-3 text-sm font-medium tracking-wide transition-all;
-    border-color: rgba(120, 72, 48, 0.16);
+    border-color: rgba(15, 23, 42, 0.12);
     color: var(--nocturne-ink-soft);
     background: rgba(255, 255, 255, 0.7);
     transition-duration: var(--motion-fast);
@@ -321,11 +352,11 @@
   }
 
   .luxury-outline:hover {
-    border-color: rgba(184, 84, 58, 0.45);
+    border-color: rgba(29, 78, 216, 0.45);
     background: #ffffff;
     color: var(--nocturne-brand-dark);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(120, 72, 48, 0.12);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
   }
 
   .luxury-outline:active {
@@ -356,16 +387,16 @@
     transform: translateX(125%);
   }
 
-  /* ---- 商品页浅色暖调：仅作用于 /products 与 /products/:id ---- */
+  /* ---- 商品页浅色冷调：仅作用于 /products 与 /products/:id ---- */
   .product-page {
     position: relative;
     color: var(--nocturne-ink);
     background-color: transparent;
     background-image:
-      radial-gradient(ellipse 42% 32% at 6% 0%, rgba(217, 138, 106, 0.1), transparent 72%),
-      radial-gradient(ellipse 38% 30% at 96% 4%, rgba(184, 84, 58, 0.06), transparent 74%),
-      linear-gradient(rgba(184, 132, 102, 0.07) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(184, 132, 102, 0.07) 1px, transparent 1px);
+      radial-gradient(ellipse 42% 32% at 6% 0%, rgba(29, 78, 216, 0.07), transparent 72%),
+      radial-gradient(ellipse 38% 30% at 96% 4%, rgba(99, 102, 241, 0.05), transparent 74%),
+      linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
     background-size:
       100% 100%,
       100% 100%,
@@ -375,23 +406,38 @@
 
   .product-cta {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium tracking-wide transition-all duration-200 ease-out;
-    color: #fffbf5;
-    background: linear-gradient(135deg, #b8543a 0%, #963d26 100%);
+    color: #ffffff;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      0 12px 28px rgba(184, 84, 58, 0.26);
+      0 12px 28px rgba(29, 78, 216, 0.24);
   }
 
   .product-cta:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, #a94a32 0%, #8b2f1d 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #1a3691 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      0 16px 34px rgba(184, 84, 58, 0.32);
+      0 16px 34px rgba(29, 78, 216, 0.3);
   }
 
   .product-cta:active {
     transform: scale(0.99);
+  }
+
+  /* 秒杀语义：与蓝色主 CTA 区分，仅用于交易强调 */
+  .product-cta--flash {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 12px 28px rgba(220, 38, 38, 0.24);
+  }
+
+  .product-cta--flash:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 16px 34px rgba(220, 38, 38, 0.3);
   }
 
   .product-cta:disabled,
@@ -409,18 +455,18 @@
   }
 
   .product-ghost:hover {
-    border-color: rgba(184, 84, 58, 0.4);
+    border-color: rgba(29, 78, 216, 0.4);
     background: #ffffff;
     color: var(--nocturne-brand-dark);
-    box-shadow: 0 10px 24px rgba(120, 72, 48, 0.1);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
   }
 
   .product-stage {
-    background-color: #fbf4ec;
+    background-color: #f8fafc;
     background-image:
-      linear-gradient(rgba(184, 132, 102, 0.12) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(184, 132, 102, 0.12) 1px, transparent 1px),
-      radial-gradient(circle at 50% 40%, #fffdfa 0%, #fbf4ec 58%, #f5e7da 100%);
+      linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+      radial-gradient(circle at 50% 40%, #ffffff 0%, #f8fafc 58%, #eef2f7 100%);
     background-size:
       28px 28px,
       28px 28px,
@@ -441,9 +487,9 @@
     background: linear-gradient(
       180deg,
       transparent 0%,
-      rgba(217, 138, 106, 0.04) 42%,
-      rgba(217, 138, 106, 0.08) 50%,
-      rgba(184, 84, 58, 0.05) 58%,
+      rgba(29, 78, 216, 0.04) 42%,
+      rgba(29, 78, 216, 0.08) 50%,
+      rgba(99, 102, 241, 0.05) 58%,
       transparent 100%
     );
     opacity: 0.75;
@@ -454,11 +500,11 @@
   .product-price-card {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(184, 84, 58, 0.24);
+    border: 1px solid rgba(220, 38, 38, 0.24);
     background:
-      radial-gradient(circle at 8% 0%, rgba(184, 84, 58, 0.07), transparent 56%),
-      linear-gradient(135deg, #fff7f0 0%, #fdeade 58%, #fbf0e4 100%);
-    box-shadow: 0 14px 36px rgba(120, 72, 48, 0.12);
+      radial-gradient(circle at 8% 0%, rgba(220, 38, 38, 0.07), transparent 56%),
+      linear-gradient(135deg, #fff5f5 0%, #fef2f2 58%, #fff1f1 100%);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.1);
   }
 
   .product-price-card::before {
@@ -466,7 +512,7 @@
     position: absolute;
     inset: 0 0 auto;
     height: 2px;
-    background: linear-gradient(90deg, #b8543a, #c58b4e 58%, transparent);
+    background: linear-gradient(90deg, #dc2626, #f87171 58%, transparent);
     opacity: 0.75;
   }
 
@@ -482,18 +528,34 @@
   }
 
   .product-pagination.el-pagination.is-background .el-pager li.is-active {
-    box-shadow: 0 6px 16px rgba(184, 84, 58, 0.24);
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.24);
   }
 
   .product-page :focus-visible {
     outline: 2px solid var(--nocturne-brand);
     outline-offset: 2px;
-    box-shadow: 0 0 0 5px rgba(184, 84, 58, 0.16);
+    box-shadow: 0 0 0 5px rgba(29, 78, 216, 0.16);
   }
 
   .product-page ::selection {
-    background: rgba(184, 84, 58, 0.18);
+    background: rgba(29, 78, 216, 0.14);
     color: var(--nocturne-ink);
+  }
+
+  /* 锚点区块：避开固定顶栏与吸顶工具栏 */
+  .section-anchor {
+    scroll-margin-top: 6.5rem;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

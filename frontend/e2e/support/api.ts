@@ -91,6 +91,42 @@ export async function createAndPreheatActivity(options?: {
   }
 }
 
+/** 创建一场未开始的活动（不预热），用于验证「即将开场」轮播区块 */
+export async function createUpcomingActivity(options?: {
+  hoursFromNow?: number
+  priceCents?: number
+}): Promise<CreatedActivity> {
+  const name = `E2E预告-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+  const fmt = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  }
+
+  const start = new Date(Date.now() + (options?.hoursFromNow ?? 1) * 3600_000)
+  const end = new Date(start.getTime() + 45 * 60_000)
+
+  const api = await ctx()
+  try {
+    const created = await unwrap<{ activityId: number }>(
+      await api.post('/api/admin/seckill/activities', {
+        headers: { 'X-Admin-Token': ADMIN_TOKEN },
+        data: {
+          productId: 1,
+          activityName: name,
+          startTime: fmt(start),
+          endTime: fmt(end),
+          seckillPrice: options?.priceCents ?? 28900,
+          seckillStock: 20,
+          limitPerUser: 1,
+        },
+      }),
+    )
+    return { activityId: created.activityId, activityName: name }
+  } finally {
+    await api.dispose()
+  }
+}
+
 export interface CreatedProduct {
   productId: string
   name: string

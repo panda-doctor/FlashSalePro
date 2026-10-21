@@ -107,12 +107,12 @@ async function onSeckill(): Promise<void> {
       </div>
       <div class="rounded-xl border border-line/70 bg-surface/80 px-3.5 py-3">
         <p class="text-xs text-ink-500">剩余库存</p>
-        <p class="num mt-0.5 text-lg font-semibold leading-tight text-brand-dark">{{ stock ?? '—' }}</p>
+        <p class="num mt-0.5 text-lg font-semibold leading-tight text-flash-dark">{{ stock ?? '—' }}</p>
       </div>
     </div>
 
     <el-button
-      :type="canBuy ? 'primary' : 'default'"
+      :type="canBuy ? 'danger' : 'default'"
       size="large"
       class="mt-4 w-full"
       :disabled="!canBuy"

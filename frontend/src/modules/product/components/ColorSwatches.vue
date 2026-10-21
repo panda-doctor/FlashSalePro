@@ -15,7 +15,7 @@ const emit = defineEmits<{ 'update:modelValue': [ColorwayId] }>()
       class="product-swatch grid h-11 w-11 place-items-center rounded-full border bg-surface"
       :class="
         modelValue === colorway.id
-          ? 'border-brand shadow-[0_0_0_4px_rgba(240,185,141,0.2)]'
+          ? 'border-brand shadow-[0_0_0_4px_rgba(29,78,216,0.2)]'
           : 'border-line hover:border-brand/35'
       "
       :aria-label="`${colorway.label}配色预览`"

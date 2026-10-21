@@ -68,6 +68,13 @@ const stockText = computed(() => {
   return `实时剩余 ${activity.stock} 件`
 })
 
+const progress = computed(() => {
+  const activity = props.activity?.activity
+  if (!activity || activity.stock === null || activity.totalStock <= 0) return 0
+  const used = activity.totalStock - activity.stock
+  return Math.min(100, Math.max(0, Math.round((used / activity.totalStock) * 100)))
+})
+
 const trust = [
   { icon: Clock3, label: '限时秒杀', note: '时间窗实时判定' },
   { icon: ShieldCheck, label: '一人一单', note: '唯一键约束' },
@@ -80,17 +87,17 @@ const trust = [
     <div class="pointer-events-none absolute inset-0" aria-hidden="true">
       <div
         class="ambient-orb absolute -left-[18%] -top-[28%] h-[58vw] w-[58vw] rounded-full blur-[90px]"
-        style="background: radial-gradient(circle, rgba(217, 138, 106, 0.24) 0%, rgba(217, 138, 106, 0) 68%)"
+        style="background: radial-gradient(circle, rgba(147, 197, 253, 0.32) 0%, rgba(147, 197, 253, 0) 68%)"
       />
       <div
         class="ambient-orb absolute -right-[12%] top-[18%] h-[46vw] w-[46vw] rounded-full blur-[110px]"
-        style="background: radial-gradient(circle, rgba(201, 91, 63, 0.16) 0%, rgba(201, 91, 63, 0) 70%)"
+        style="background: radial-gradient(circle, rgba(199, 210, 254, 0.3) 0%, rgba(199, 210, 254, 0) 70%)"
       />
       <div
         class="absolute inset-0 opacity-70"
         style="
-          background-image: linear-gradient(rgba(184, 132, 102, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(184, 132, 102, 0.1) 1px, transparent 1px);
+          background-image: linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
           background-size: 96px 96px;
           mask-image: radial-gradient(ellipse at 46% 0%, black 8%, transparent 70%);
         "
@@ -105,6 +112,17 @@ const trust = [
           <Sparkles :size="14" aria-hidden="true" />
           FlashSale Atelier
         </p>
+
+        <ul class="mt-6 flex flex-wrap gap-2">
+          <li
+            v-for="item in trust"
+            :key="item.label"
+            class="inline-flex items-center gap-2 rounded-full border border-line bg-surface/80 px-3 py-1.5 text-[11px] font-medium text-ink-700 shadow-sm backdrop-blur-sm"
+          >
+            <component :is="item.icon" :size="13" class="text-brand" aria-hidden="true" />
+            {{ item.label }}
+          </li>
+        </ul>
 
         <h1
           class="mt-7 font-display font-medium leading-[1.08] tracking-[-0.01em] text-ink-900"
@@ -141,96 +159,128 @@ const trust = [
 
       <div class="relative">
         <div
-          class="pointer-events-none absolute -inset-6 rounded-[2rem] border border-brand/15 bg-gradient-to-br from-brand/10 to-transparent"
+          class="pointer-events-none absolute -inset-6 rounded-[2rem] border border-brand/15 bg-gradient-to-br from-brand/[0.08] to-transparent"
           aria-hidden="true"
         />
-        <div class="glass-panel relative min-h-[24rem] rounded-[1.75rem] p-7 sm:p-9">
-          <div class="flex items-center justify-between gap-3">
-            <p class="text-[10px] uppercase tracking-[0.3em] text-ink-500">On the floor</p>
+        <div class="relative overflow-hidden rounded-[1.75rem] border border-line bg-surface/95 shadow-glass backdrop-blur-xl">
+          <div class="flex items-center justify-between gap-3 border-b border-line/80 bg-muted/50 px-5 py-3 sm:px-7">
+            <div class="flex items-center gap-2" aria-hidden="true">
+              <span class="h-2 w-2 rounded-full bg-line" />
+              <span class="h-2 w-2 rounded-full bg-line" />
+              <span class="h-2 w-2 rounded-full bg-line" />
+            </div>
+            <p class="text-[10px] uppercase tracking-[0.3em] text-ink-500">实时控制台</p>
             <span
               v-if="meta"
-              class="inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand-soft px-3 py-1 text-[11px] font-medium text-brand-dark"
+              class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium"
+              :class="
+                activity?.state === 'RUNNING'
+                  ? 'border-flash/25 bg-flash-soft text-flash-dark'
+                  : 'border-line bg-surface text-ink-700'
+              "
             >
               <span
                 class="h-1.5 w-1.5 rounded-full"
-                :class="activity?.state === 'RUNNING' ? 'animate-pulse bg-brand' : 'bg-ink-300'"
+                :class="activity?.state === 'RUNNING' ? 'animate-pulse bg-flash' : 'bg-ink-300'"
                 aria-hidden="true"
               />
               {{ meta.label }}
             </span>
           </div>
 
-          <template v-if="loading">
-            <div class="mt-8 space-y-4" aria-hidden="true">
-              <div class="h-3 w-24 animate-pulse rounded-full bg-ink-900/10" />
-              <div class="h-7 w-4/5 animate-pulse rounded-lg bg-ink-900/[0.12]" />
-              <div class="h-14 w-full animate-pulse rounded-xl bg-ink-900/[0.07]" />
-              <div class="h-3 w-1/2 animate-pulse rounded-full bg-ink-900/10" />
-            </div>
-          </template>
+          <div class="p-7 sm:p-9">
+            <template v-if="loading">
+              <div class="space-y-4" aria-hidden="true">
+                <div class="h-3 w-24 animate-pulse rounded-full bg-ink-900/10" />
+                <div class="h-7 w-4/5 animate-pulse rounded-lg bg-ink-900/[0.12]" />
+                <div class="h-14 w-full animate-pulse rounded-xl bg-ink-900/[0.07]" />
+                <div class="h-3 w-1/2 animate-pulse rounded-full bg-ink-900/10" />
+              </div>
+            </template>
 
-          <template v-else-if="activity && meta">
-            <p class="mt-7 text-xs text-ink-500">{{ activity.activity.productName || '关联商品' }}</p>
-            <h2 class="mt-2 font-display text-[26px] leading-snug text-ink-900 sm:text-[30px]">
-              {{ activity.activity.activityName }}
-            </h2>
+            <template v-else-if="activity && meta">
+              <p class="text-xs text-ink-500">{{ activity.activity.productName || '关联商品' }}</p>
+              <h2 class="mt-2 font-display text-[26px] leading-snug text-ink-900 sm:text-[30px]">
+                {{ activity.activity.activityName }}
+              </h2>
 
-            <div class="mt-6 flex items-end gap-3">
-              <span class="num text-[28px] font-semibold leading-none text-price">
-                {{ formatPrice(activity.activity.seckillPrice) }}
-              </span>
-              <span
-                v-if="activity.activity.originalPrice > activity.activity.seckillPrice"
-                class="num text-sm leading-none text-ink-500 line-through"
-              >
-                {{ formatPrice(activity.activity.originalPrice) }}
-              </span>
-            </div>
-
-            <div class="mt-7 rounded-2xl border border-brand/20 bg-surface/80 px-5 py-4 shadow-card backdrop-blur-sm">
-              <p class="text-[10px] uppercase tracking-[0.24em] text-ink-500">{{ countdownLabel }}</p>
-              <div v-if="units.length" class="num mt-2 flex items-baseline gap-3 text-ink-900">
-                <span v-for="unit in units" :key="unit.label" class="flex items-baseline gap-1">
-                  <span class="text-[30px] font-medium leading-none tracking-tight">{{ unit.value }}</span>
-                  <span class="text-[11px] text-ink-500">{{ unit.label }}</span>
+              <div class="mt-6 flex items-end gap-3">
+                <span class="num text-[28px] font-semibold leading-none text-price">
+                  {{ formatPrice(activity.activity.seckillPrice) }}
+                </span>
+                <span
+                  v-if="activity.activity.originalPrice > activity.activity.seckillPrice"
+                  class="num text-sm leading-none text-ink-500 line-through"
+                >
+                  {{ formatPrice(activity.activity.originalPrice) }}
                 </span>
               </div>
-              <p v-else class="mt-2 text-sm text-ink-500">等待库存预热后开放</p>
-              <div class="mt-3 flex items-center justify-between gap-3 border-t border-brand/10 pt-3">
-                <span class="text-xs text-ink-500">{{ schedule }}</span>
-                <span class="num text-xs font-medium text-brand-dark">{{ stockText }}</span>
+
+              <div class="mt-7 rounded-2xl border border-line bg-muted/40 px-5 py-4">
+                <p class="text-[10px] uppercase tracking-[0.24em] text-ink-500">{{ countdownLabel }}</p>
+                <div v-if="units.length" class="num mt-2 flex items-baseline gap-3 text-flash">
+                  <span v-for="unit in units" :key="unit.label" class="flex items-baseline gap-1">
+                    <span class="text-[30px] font-semibold leading-none tracking-tight">{{ unit.value }}</span>
+                    <span class="text-[11px] text-flash/70">{{ unit.label }}</span>
+                  </span>
+                </div>
+                <p v-else class="mt-2 text-sm text-ink-500">等待库存预热后开放</p>
+                <div class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
+                  <span class="text-xs text-ink-500">{{ schedule }}</span>
+                  <span class="num text-xs font-medium text-ink-700">{{ stockText }}</span>
+                </div>
               </div>
-            </div>
 
-            <RouterLink
-              :to="{ name: 'activity-detail', params: { id: activity.activity.activityId } }"
-              class="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-brand-dark transition-colors duration-200 hover:text-ink-900"
-            >
-              查看本场活动
-              <ArrowRight :size="15" aria-hidden="true" />
-            </RouterLink>
-          </template>
+              <div class="mt-5">
+                <div class="flex items-center justify-between text-[11px] text-ink-500">
+                  <span>抢购进度</span>
+                  <span class="num text-flash">{{ progress }}%</span>
+                </div>
+                <div
+                  class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line/70"
+                  role="progressbar"
+                  :aria-valuenow="progress"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-label="`${activity.activity.activityName} 抢购进度`"
+                >
+                  <div
+                    class="h-full rounded-full bg-gradient-to-r from-flash to-flash-dark transition-all duration-500 ease-out"
+                    :style="{ width: `${progress}%` }"
+                  />
+                </div>
+              </div>
 
-          <template v-else>
-            <p class="mt-10 font-display text-2xl leading-snug text-ink-900">
-              {{ failed ? '活动信息暂时不可用' : '此刻暂无进行中的场次' }}
+              <RouterLink
+                :to="{ name: 'activity-detail', params: { id: activity.activity.activityId } }"
+                class="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-brand/25 bg-brand-soft text-sm font-medium text-brand-dark transition-all duration-200 hover:border-brand/50 hover:bg-brand/10"
+              >
+                查看本场活动
+                <ArrowRight :size="15" aria-hidden="true" />
+              </RouterLink>
+            </template>
+
+            <template v-else>
+              <p class="mt-2 font-display text-2xl leading-snug text-ink-900">
+                {{ failed ? '活动信息暂时不可用' : '此刻暂无进行中的场次' }}
+              </p>
+              <p class="mt-3 text-sm leading-6 text-ink-500">
+                {{
+                  failed
+                    ? '活动接口未返回数据。可以稍后重试，或先浏览在售商品。'
+                    : '活动大厅会同步最新的时间窗与库存状态。下一场开始前，可以先浏览在售商品。'
+                }}
+              </p>
+              <div class="mt-8 flex flex-wrap gap-3">
+                <RouterLink :to="{ name: 'activities' }" class="luxury-cta">查看活动大厅</RouterLink>
+                <RouterLink :to="{ name: 'products' }" class="luxury-outline">浏览商品</RouterLink>
+              </div>
+            </template>
+
+            <p class="mt-7 border-t border-line pt-4 text-[11px] leading-5 text-ink-500">
+              场次状态、倒计时与库存均以活动接口返回为准。
             </p>
-            <p class="mt-3 text-sm leading-6 text-ink-500">
-              {{
-                failed
-                  ? '活动接口未返回数据。可以稍后重试，或先浏览在售商品。'
-                  : '活动大厅会同步最新的时间窗与库存状态。下一场开始前，可以先浏览在售商品。'
-              }}
-            </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-              <RouterLink :to="{ name: 'activities' }" class="luxury-cta">查看活动大厅</RouterLink>
-              <RouterLink :to="{ name: 'products' }" class="luxury-outline">浏览商品</RouterLink>
-            </div>
-          </template>
-
-          <p class="mt-7 border-t border-line pt-4 text-[11px] leading-5 text-ink-500">
-            场次状态、倒计时与库存均以活动接口返回为准。
-          </p>
+          </div>
         </div>
       </div>
     </div>

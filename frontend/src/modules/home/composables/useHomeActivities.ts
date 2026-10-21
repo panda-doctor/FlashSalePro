@@ -1,13 +1,24 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { listActivities } from '@/modules/activity/api'
 import {
+  isFinishedState,
+  resolveActivityState,
+} from '@/modules/activity/utils/activityPhase'
+import {
   SPOTLIGHT_LIMIT,
   selectSpotlightActivities,
   type SpotlightActivity,
 } from '@/modules/home/utils/spotlight'
 
+export interface HomeActivityPipeline {
+  notStarted: number
+  running: number
+  finished: number
+}
+
 export interface HomeActivitiesState {
   activities: ComputedRef<SpotlightActivity[]>
+  pipeline: ComputedRef<HomeActivityPipeline>
   loading: Ref<boolean>
   failed: Ref<boolean>
 }
@@ -36,5 +47,24 @@ export function useHomeActivities(now: Ref<number>, limit = SPOTLIGHT_LIMIT): Ho
 
   const spotlight = computed(() => selectSpotlightActivities(activities.value, now.value, limit))
 
-  return { activities: spotlight, loading, failed }
+  /** 全量活动的阶段分布，供首页链路条展示真实进度 */
+  const pipeline = computed<HomeActivityPipeline>(() => {
+    const summary: HomeActivityPipeline = { notStarted: 0, running: 0, finished: 0 }
+    for (const activity of activities.value) {
+      const state = resolveActivityState({
+        startTime: activity.startTime,
+        endTime: activity.endTime,
+        status: activity.status,
+        stock: activity.stock,
+        preheated: activity.preheated,
+        now: now.value,
+      })
+      if (state === 'NOT_STARTED') summary.notStarted += 1
+      else if (state === 'RUNNING') summary.running += 1
+      else if (isFinishedState(state)) summary.finished += 1
+    }
+    return summary
+  })
+
+  return { activities: spotlight, pipeline, loading, failed }
 }

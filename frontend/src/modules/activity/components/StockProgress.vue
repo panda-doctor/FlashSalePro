@@ -39,7 +39,7 @@ const percent = computed(() => {
     >
       <div
         class="h-full rounded-full transition-all duration-500 ease-out"
-        :class="percent >= 100 ? 'bg-danger' : 'bg-gradient-to-r from-[#FF8A5C] to-brand'"
+        :class="percent >= 100 ? 'bg-danger' : 'bg-gradient-to-r from-flash to-flash-dark'"
         :style="{ width: `${percent}%` }"
       />
     </div>

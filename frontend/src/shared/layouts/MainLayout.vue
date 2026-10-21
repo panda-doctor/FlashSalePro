@@ -21,7 +21,7 @@ const transparent = computed(() => isImmersive.value && !scrolled.value)
 const headerClass = computed(() => {
   const paint = transparent.value
     ? 'border-transparent bg-transparent'
-    : 'border-line/70 bg-surface/90 shadow-[0_1px_0_rgba(120,72,48,0.06)] backdrop-blur-xl backdrop-saturate-150'
+    : 'border-line/70 bg-surface/90 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur-xl backdrop-saturate-150'
   return `fixed inset-x-0 top-0 ${paint}`
 })
 
@@ -108,7 +108,7 @@ onBeforeUnmount(() => {
     >
       <div class="page-container flex h-16 items-center gap-4 sm:gap-6">
         <RouterLink to="/" class="group flex shrink-0 items-center gap-2.5" aria-label="秒杀商城首页">
-          <span class="grid h-10 w-10 place-items-center rounded-full bg-brand text-[#FFFBF5] shadow-[0_6px_18px_rgba(184,84,58,0.24)] ring-1 ring-inset ring-white/25">
+          <span class="grid h-10 w-10 place-items-center rounded-full bg-brand text-white shadow-[0_6px_18px_rgba(29,78,216,0.24)] ring-1 ring-inset ring-white/25">
             <span class="text-[15px] font-bold leading-none">F</span>
           </span>
           <span class="flex flex-col leading-none">
@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
             <RouterLink
               v-if="hasRoute('register')"
               :to="{ name: 'register' }"
-              class="inline-flex min-h-11 items-center rounded-full bg-brand px-4 text-xs font-medium tracking-wide text-[#FFFBF5] shadow-[0_8px_18px_rgba(184,84,58,0.24)] transition-all duration-200 hover:bg-brand-dark active:scale-[0.98]"
+              class="inline-flex min-h-11 items-center rounded-full bg-brand px-4 text-xs font-medium tracking-wide text-white shadow-[0_8px_18px_rgba(29,78,216,0.24)] transition-all duration-200 hover:bg-brand-dark active:scale-[0.98]"
             >
               注册
             </RouterLink>
@@ -200,14 +200,14 @@ onBeforeUnmount(() => {
       <RouterView />
     </main>
 
-    <footer class="relative z-10 overflow-hidden border-t border-line bg-[#FBF3EC]/90 text-ink-500 backdrop-blur-xl">
+    <footer class="relative z-10 overflow-hidden border-t border-line bg-[#F8FAFC]/90 text-ink-500 backdrop-blur-xl">
       <div
-        class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-atelier-gold/45 to-transparent"
+        class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/30 to-transparent"
         aria-hidden="true"
       />
       <div
         class="pointer-events-none absolute -right-24 -top-40 h-[28rem] w-[28rem] rounded-full opacity-40 blur-[110px]"
-        style="background: radial-gradient(circle, rgba(184, 84, 58, 0.14), rgba(184, 84, 58, 0) 68%)"
+        style="background: radial-gradient(circle, rgba(29, 78, 216, 0.14), rgba(29, 78, 216, 0) 68%)"
         aria-hidden="true"
       />
       <div class="page-container relative grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
@@ -310,7 +310,7 @@ onBeforeUnmount(() => {
           <button
             v-if="!auth.isLoggedIn"
             type="button"
-            class="min-h-11 rounded-xl bg-brand px-3 text-left text-sm font-medium text-[#FFFBF5]"
+            class="min-h-11 rounded-xl bg-brand px-3 text-left text-sm font-medium text-white"
             @click="go('register')"
           >
             注册

@@ -3,12 +3,14 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowRight, Clock3, Flame } from 'lucide-vue-next'
 import type { SpotlightActivity } from '@/modules/home/utils/spotlight'
+import type { HomeActivityPipeline } from '@/modules/home/composables/useHomeActivities'
 import { ACTIVITY_STATE_META } from '@/modules/activity/utils/activityPhase'
 import { formatPrice } from '@/shared/utils/money'
 import { formatCountdown, formatShortDateTime, parseActivityTime } from '@/shared/utils/time'
 
 const props = defineProps<{
   activities: SpotlightActivity[]
+  pipeline: HomeActivityPipeline
   loading: boolean
   failed: boolean
   now: number
@@ -43,25 +45,24 @@ function stockText(item: SpotlightActivity): string {
   return `剩余 ${stock} / ${totalStock} 件`
 }
 
-function stateDot(state: SpotlightActivity['state']): string {
-  if (state === 'RUNNING') return 'bg-brand'
-  if (state === 'NOT_STARTED') return 'bg-ink-300'
-  return 'bg-ink-500/60'
-}
-
 const gridClass = computed(() => {
   if (props.activities.length === 1) return 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
   if (props.activities.length === 2) return 'mx-auto grid max-w-4xl gap-4 sm:grid-cols-2'
   return 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
 })
 
+const stages = computed(() => [
+  { key: 'notStarted', label: '未开始', count: props.pipeline.notStarted, tone: 'idle' },
+  { key: 'running', label: '进行中', count: props.pipeline.running, tone: 'live' },
+  { key: 'finished', label: '已结束', count: props.pipeline.finished, tone: 'idle' },
+])
 </script>
 
 <template>
-  <section class="relative overflow-hidden bg-[#F6EBE1] text-ink-900" aria-labelledby="seckill-heading">
+  <section class="relative overflow-hidden bg-[#F8FAFC] text-ink-900" aria-labelledby="seckill-heading">
     <div
-      class="pointer-events-none absolute right-0 top-0 h-[34rem] w-[34rem] translate-x-1/3 -translate-y-1/3 rounded-full opacity-60 blur-[120px]"
-      style="background: radial-gradient(circle, rgba(184, 84, 58, 0.14), transparent 68%)"
+      class="pointer-events-none absolute right-0 top-0 h-[34rem] w-[34rem] translate-x-1/3 -translate-y-1/3 rounded-full opacity-70 blur-[120px]"
+      style="background: radial-gradient(circle, rgba(248, 113, 113, 0.14), transparent 68%)"
       aria-hidden="true"
     />
 
@@ -86,7 +87,45 @@ const gridClass = computed(() => {
         </RouterLink>
       </div>
 
-      <div v-if="loading" class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+      <div
+        class="reveal mt-10 overflow-hidden rounded-2xl border border-line bg-surface/90 shadow-card backdrop-blur-sm"
+        data-reveal
+        data-testid="seckill-pipeline"
+      >
+        <div class="flex flex-col divide-y divide-line sm:flex-row sm:divide-x sm:divide-y-0">
+          <div v-for="(stage, index) in stages" :key="stage.key" class="relative flex-1 px-5 py-4 sm:px-6 sm:py-5">
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-ink-500">
+                <span
+                  class="h-1.5 w-1.5 rounded-full"
+                  :class="stage.tone === 'live' ? 'bg-flash' : 'bg-ink-300'"
+                  aria-hidden="true"
+                />
+                {{ stage.label }}
+              </span>
+              <span class="num text-[10px] tracking-[0.2em] text-ink-300">0{{ index + 1 }}</span>
+            </div>
+            <p class="mt-2 flex items-baseline gap-1.5">
+              <span
+                class="num text-[26px] font-semibold leading-none"
+                :class="stage.tone === 'live' ? 'text-flash' : 'text-ink-900'"
+              >
+                {{ stage.count }}
+              </span>
+              <span class="text-[11px] text-ink-500">场</span>
+            </p>
+            <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-line/70" aria-hidden="true">
+              <div
+                class="h-full rounded-full"
+                :class="stage.tone === 'live' ? 'bg-flash' : 'bg-brand/50'"
+                :style="{ width: stage.count > 0 ? '100%' : '0%' }"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="loading" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
         <div v-for="index in 3" :key="index" class="surface-card rounded-2xl p-6">
           <div class="h-3 w-20 animate-pulse rounded-full bg-ink-900/10" />
           <div class="mt-6 h-6 w-3/4 animate-pulse rounded-lg bg-ink-900/10" />
@@ -96,15 +135,26 @@ const gridClass = computed(() => {
         </div>
       </div>
 
-      <div v-else-if="activities.length" class="mt-12" :class="gridClass">
+      <div v-else-if="activities.length" class="mt-8" :class="gridClass">
         <article
           v-for="(item, index) in activities"
           :key="item.activity.activityId"
-          class="group flex flex-col rounded-2xl border border-line bg-surface p-6 shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lift"
+          class="group flex flex-col rounded-2xl border border-line bg-surface p-6 shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand/30 hover:shadow-lift"
         >
           <div class="flex items-center justify-between gap-3">
-            <span class="inline-flex items-center gap-2 rounded-full border border-line bg-muted/60 px-3 py-1 text-[11px] text-ink-700">
-              <span class="h-1.5 w-1.5 rounded-full" :class="stateDot(item.state)" aria-hidden="true" />
+            <span
+              class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px]"
+              :class="
+                item.state === 'RUNNING'
+                  ? 'border-flash/25 bg-flash-soft text-flash-dark'
+                  : 'border-line bg-muted/60 text-ink-700'
+              "
+            >
+              <span
+                class="h-1.5 w-1.5 rounded-full"
+                :class="item.state === 'RUNNING' ? 'bg-flash' : 'bg-ink-300'"
+                aria-hidden="true"
+              />
               {{ ACTIVITY_STATE_META[item.state].label }}
             </span>
             <span class="num text-[11px] tracking-[0.2em] text-ink-500">0{{ index + 1 }}</span>
@@ -116,7 +166,7 @@ const gridClass = computed(() => {
           </h3>
 
           <div class="mt-4 flex items-end gap-2">
-            <span class="num text-xl leading-none text-price">
+            <span class="num text-xl font-semibold leading-none text-price">
               {{ formatPrice(item.activity.seckillPrice) }}
             </span>
             <span
@@ -132,7 +182,7 @@ const gridClass = computed(() => {
               <Clock3 :size="13" aria-hidden="true" />
               {{ countdownLabel(item) }}
             </span>
-            <span v-if="countdown(item)" class="num text-sm text-ink-900">{{ countdown(item) }}</span>
+            <span v-if="countdown(item)" class="num text-sm font-semibold text-flash">{{ countdown(item) }}</span>
             <span v-else class="text-[11px] text-ink-500">{{ formatShortDateTime(item.activity.startTime) }}</span>
           </div>
 
@@ -150,7 +200,7 @@ const gridClass = computed(() => {
               :aria-label="`${item.activity.activityName} 抢购进度`"
             >
               <div
-                class="h-full rounded-full bg-gradient-to-r from-brand to-atelier-gold transition-all duration-500 ease-out"
+                class="h-full rounded-full bg-gradient-to-r from-flash to-flash-dark transition-all duration-500 ease-out"
                 :style="{ width: `${progress(item)}%` }"
               />
             </div>
@@ -158,7 +208,8 @@ const gridClass = computed(() => {
 
           <RouterLink
             :to="{ name: 'activity-detail', params: { id: item.activity.activityId } }"
-            class="mt-auto flex min-h-11 items-center justify-between border-t border-line/80 pt-5 text-sm text-ink-700 transition-colors duration-200 hover:text-brand-dark"
+            class="mt-auto flex min-h-11 items-center justify-between border-t border-line/80 pt-5 text-sm transition-colors duration-200"
+            :class="item.state === 'RUNNING' ? 'font-medium text-flash-dark hover:text-flash' : 'text-ink-700 hover:text-brand-dark'"
           >
             {{ item.state === 'RUNNING' ? '进入抢购' : '查看场次' }}
             <ArrowRight :size="15" class="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
@@ -172,7 +223,7 @@ const gridClass = computed(() => {
         >
           <div
             class="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full opacity-70 blur-[60px]"
-            style="background: radial-gradient(circle, rgba(184, 84, 58, 0.18), transparent 68%)"
+            style="background: radial-gradient(circle, rgba(29, 78, 216, 0.16), transparent 68%)"
             aria-hidden="true"
           />
           <div class="relative">
@@ -191,7 +242,7 @@ const gridClass = computed(() => {
         </RouterLink>
       </div>
 
-      <div v-else class="mt-12 rounded-2xl border border-line bg-surface px-8 py-14 text-center shadow-card sm:px-14">
+      <div v-else class="mt-8 rounded-2xl border border-line bg-surface px-8 py-14 text-center shadow-card sm:px-14">
         <span class="mx-auto grid h-12 w-12 place-items-center rounded-full border border-line bg-brand-soft text-brand">
           <Flame :size="20" :stroke-width="1.6" aria-hidden="true" />
         </span>

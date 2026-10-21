@@ -63,7 +63,7 @@ const imageClass = computed(() =>
     <div v-else class="flex h-full w-full items-center justify-center p-5 sm:p-8">
       <ProductHeadphoneArt
         :colorway="colorway"
-        class="max-h-[92%] max-w-[92%] drop-shadow-[0_20px_26px_rgba(74,43,24,0.16)]"
+        class="max-h-[92%] max-w-[92%] drop-shadow-[0_20px_26px_rgba(15,23,42,0.16)]"
       />
     </div>
   </div>

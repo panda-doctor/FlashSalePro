@@ -8,8 +8,9 @@ import {
   resolveParticleCount,
   twinkleAlpha,
 } from '@/shared/utils/particleMath'
+import { readParticlePalette, type ParticlePalette } from '@/shared/utils/particlePalette'
 
-type ParticleTone = 'taupe' | 'ember'
+type ParticleTone = 'toneA' | 'toneB'
 
 interface Particle {
   x: number
@@ -39,10 +40,6 @@ interface Point {
 }
 
 const TAU = Math.PI * 2
-const COLORS: Record<ParticleTone, string> = {
-  taupe: '154, 124, 100',
-  ember: '184, 84, 58',
-}
 
 function between(min: number, max: number): number {
   return min + Math.random() * (max - min)
@@ -89,7 +86,7 @@ function createParticles(width: number, height: number, count: number): Particle
       offsetY: 0,
       velocityX: 0,
       velocityY: 0,
-      tone: Math.random() < 0.7 ? 'taupe' : 'ember',
+      tone: Math.random() < 0.7 ? 'toneA' : 'toneB',
     }
   })
 }
@@ -109,6 +106,7 @@ export function useParticleField(canvasRef: Ref<HTMLCanvasElement | null>) {
   let pointerEnabled = false
   let resizeObserver: ResizeObserver | null = null
   let motionQuery: MediaQueryList | null = null
+  let palette: ParticlePalette = readParticlePalette()
 
   const pointer = { x: -9999, y: -9999, active: false }
   const glow = { x: 0, y: 0, ready: false }
@@ -120,9 +118,9 @@ export function useParticleField(canvasRef: Ref<HTMLCanvasElement | null>) {
     if (glow.ready && pointerEnabled) {
       const radius = 150
       const gradient = context.createRadialGradient(glow.x, glow.y, 0, glow.x, glow.y, radius)
-      gradient.addColorStop(0, 'rgba(184, 84, 58, 0.055)')
-      gradient.addColorStop(0.45, 'rgba(166, 106, 22, 0.03)')
-      gradient.addColorStop(1, 'rgba(166, 106, 22, 0)')
+      gradient.addColorStop(0, palette.glow)
+      gradient.addColorStop(0.45, `rgba(${palette.toneA}, 0.03)`)
+      gradient.addColorStop(1, `rgba(${palette.toneA}, 0)`)
       context.fillStyle = gradient
       context.fillRect(glow.x - radius, glow.y - radius, radius * 2, radius * 2)
     }
@@ -160,7 +158,7 @@ export function useParticleField(canvasRef: Ref<HTMLCanvasElement | null>) {
         context.moveTo(a.x, a.y)
         context.lineTo(b.x, b.y)
         context.lineWidth = 1
-        context.strokeStyle = `rgba(${COLORS[a.tone]}, ${alpha.toFixed(3)})`
+        context.strokeStyle = `rgba(${palette[a.tone]}, ${alpha.toFixed(3)})`
         context.stroke()
 
         linkCounts[i] += 1
@@ -174,7 +172,7 @@ export function useParticleField(canvasRef: Ref<HTMLCanvasElement | null>) {
       const point = points[i]
       context.beginPath()
       context.arc(point.x, point.y, particles[i].size, 0, TAU)
-      context.fillStyle = `rgba(${COLORS[point.tone]}, ${point.alpha.toFixed(3)})`
+      context.fillStyle = `rgba(${palette[point.tone]}, ${point.alpha.toFixed(3)})`
       context.fill()
     }
   }
@@ -256,6 +254,8 @@ export function useParticleField(canvasRef: Ref<HTMLCanvasElement | null>) {
     context = canvas.getContext('2d')
     if (!context) return
     context.setTransform(dpr, 0, 0, dpr, 0, 0)
+    // 配色只在重排/重建时读取一次，避免每帧 getComputedStyle 触发样式重算
+    palette = readParticlePalette()
     particles = createParticles(width, height, resolveParticleCount(width, height))
     pointerEnabled = window.innerWidth >= 768 && window.matchMedia('(pointer: fine)').matches
     glow.ready = false

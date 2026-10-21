@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { RefreshCw, Search } from 'lucide-vue-next'
-import ActivityCard from '@/modules/activity/components/ActivityCard.vue'
+import { computed, ref, watch } from 'vue'
+import { Archive, Flame, RefreshCw, Sparkles } from 'lucide-vue-next'
+import ActivityPhaseOverview from '@/modules/activity/components/ActivityPhaseOverview.vue'
+import ActivitySection from '@/modules/activity/components/ActivitySection.vue'
+import ActivityToolbar from '@/modules/activity/components/ActivityToolbar.vue'
+import UpcomingCarousel from '@/modules/activity/components/UpcomingCarousel.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
 import { listActivities } from '@/modules/activity/api'
 import { useNow } from '@/shared/composables/useNow'
 import { ApiError, RESULT_CODE } from '@/shared/types/common'
 import type { ActivityItemVO } from '@/modules/activity/types'
-import {
-  activitySortWeight,
-  isFinishedState,
-  resolveActivityState,
-  type ActivityDisplayState,
-} from '@/modules/activity/utils/activityPhase'
-import { toTimestamp } from '@/shared/utils/time'
+import { resolveActivityState } from '@/modules/activity/utils/activityPhase'
+import { groupActivities } from '@/modules/activity/utils/grouping'
+import { clampPage, pageCount, pageSlice } from '@/shared/utils/pagination'
 
-type FilterValue = 'ALL' | 'RUNNING' | 'UPCOMING' | 'FINISHED'
+const PAGE_SIZE = 4
 
 const now = useNow(1000)
 
@@ -24,14 +23,8 @@ const activities = ref<ActivityItemVO[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
 const keyword = ref('')
-const filter = ref<FilterValue>('ALL')
-
-const filters: Array<{ value: FilterValue; label: string }> = [
-  { value: 'ALL', label: '全部' },
-  { value: 'RUNNING', label: '进行中' },
-  { value: 'UPCOMING', label: '未开始' },
-  { value: 'FINISHED', label: '已结束' },
-]
+const livePage = ref(1)
+const endedPage = ref(1)
 
 function load(): void {
   loading.value = true
@@ -72,36 +65,41 @@ const decorated = computed(() =>
   })),
 )
 
-function matchesFilter(state: ActivityDisplayState, value: FilterValue): boolean {
-  if (value === 'ALL') return true
-  if (value === 'RUNNING') return state === 'RUNNING' || state === 'NOT_PREHEATED'
-  if (value === 'UPCOMING') return state === 'NOT_STARTED'
-  return isFinishedState(state)
+const groups = computed(() => groupActivities(decorated.value, keyword.value))
+const liveTotal = computed(() => groups.value.live.length)
+const endedTotal = computed(() => groups.value.ended.length)
+const livePages = computed(() => pageCount(liveTotal.value, PAGE_SIZE))
+const endedPages = computed(() => pageCount(endedTotal.value, PAGE_SIZE))
+const liveItems = computed(() => pageSlice(groups.value.live, livePage.value, PAGE_SIZE))
+const endedItems = computed(() => pageSlice(groups.value.ended, endedPage.value, PAGE_SIZE))
+const hasMatches = computed(() => groups.value.counts.ALL > 0)
+const hasKeyword = computed(() => keyword.value.trim().length > 0)
+
+function scrollToSection(id: string): void {
+  const target = document.getElementById(id)
+  if (!target) return
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
 }
 
-const visible = computed(() => {
-  const term = keyword.value.trim().toLowerCase()
-  return decorated.value
-    .filter((entry) => matchesFilter(entry.state, filter.value))
-    .filter((entry) => {
-      if (!term) return true
-      const name = entry.item.activityName.toLowerCase()
-      const product = (entry.item.productName ?? '').toLowerCase()
-      return name.includes(term) || product.includes(term)
-    })
-    .sort((a, b) => {
-      const weight = activitySortWeight(a.state) - activitySortWeight(b.state)
-      if (weight !== 0) return weight
-      return toTimestamp(a.item.startTime) - toTimestamp(b.item.startTime)
-    })
+function clearKeyword(): void {
+  keyword.value = ''
+}
+
+watch(keyword, () => {
+  livePage.value = 1
+  endedPage.value = 1
 })
 
-const counts = computed(() => ({
-  ALL: decorated.value.length,
-  RUNNING: decorated.value.filter((entry) => matchesFilter(entry.state, 'RUNNING')).length,
-  UPCOMING: decorated.value.filter((entry) => matchesFilter(entry.state, 'UPCOMING')).length,
-  FINISHED: decorated.value.filter((entry) => matchesFilter(entry.state, 'FINISHED')).length,
-}))
+watch(liveTotal, (total) => {
+  const next = clampPage(livePage.value, total, PAGE_SIZE)
+  if (next !== livePage.value) livePage.value = next
+})
+
+watch(endedTotal, (total) => {
+  const next = clampPage(endedPage.value, total, PAGE_SIZE)
+  if (next !== endedPage.value) endedPage.value = next
+})
 
 load()
 </script>
@@ -109,7 +107,7 @@ load()
 <template>
   <div class="pb-16">
     <section
-      class="relative isolate overflow-hidden bg-gradient-to-br from-[#FBF0E6] via-[#F8EADD] to-[#FAF6F1] text-ink-900"
+      class="relative isolate overflow-hidden bg-gradient-to-br from-[#F1F5F9] via-[#F8FAFC] to-white text-ink-900"
       aria-label="限时秒杀横幅"
     >
       <div
@@ -117,12 +115,12 @@ load()
         aria-hidden="true"
       />
       <div
-        class="pointer-events-none absolute -bottom-40 right-[-6rem] h-80 w-80 rounded-full bg-[#FFB266]/20 blur-[110px]"
+        class="pointer-events-none absolute -bottom-40 right-[-6rem] h-80 w-80 rounded-full bg-[#BFDBFE]/35 blur-[110px]"
         aria-hidden="true"
       />
       <div
         class="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style="background-image: radial-gradient(rgba(184, 132, 102, 0.38) 1px, transparent 1px); background-size: 22px 22px"
+        style="background-image: radial-gradient(rgba(15, 23, 42, 0.28) 1px, transparent 1px); background-size: 22px 22px"
         aria-hidden="true"
       />
       <div class="page-container relative py-10 sm:py-12">
@@ -153,68 +151,12 @@ load()
     </section>
 
     <div class="page-container py-8 sm:py-10">
-      <section class="grid grid-cols-3 gap-2.5 sm:gap-3" aria-label="活动阶段概览">
-        <div class="rounded-2xl border border-brand/30 bg-gradient-to-br from-[#B8543A] to-[#8B2F1D] p-3 text-[#FFFBF5] shadow-[0_10px_24px_rgba(120,72,48,0.22)] sm:p-4">
-          <p class="flex items-center gap-1.5 text-[11px] text-[#FFFBF5]/90 sm:gap-2 sm:text-xs">
-            <span class="relative flex h-1.5 w-1.5" aria-hidden="true">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FFFBF5] opacity-60 motion-reduce:hidden" />
-              <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FFFBF5]" />
-            </span>
-            进行中
-          </p>
-          <p class="num mt-2 text-xl font-semibold leading-none sm:text-[26px]">{{ counts.RUNNING }}</p>
-          <p class="mt-1.5 text-[10px] leading-4 text-[#FFFBF5]/80 sm:text-[11px]">现在可以抢购</p>
-        </div>
-        <div class="rounded-2xl border border-warning/25 bg-warning/10 p-3 sm:p-4">
-          <p class="flex items-center gap-1.5 text-[11px] text-ink-500 sm:gap-2 sm:text-xs">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
-            未开始
-          </p>
-          <p class="num mt-2 text-xl font-semibold leading-none text-warning sm:text-[26px]">{{ counts.UPCOMING }}</p>
-          <p class="mt-1.5 text-[10px] leading-4 text-ink-500 sm:text-[11px]">等待时间窗开启</p>
-        </div>
-        <div class="rounded-2xl border border-line/80 bg-muted/80 p-3 sm:p-4">
-          <p class="flex items-center gap-1.5 text-[11px] text-ink-500 sm:gap-2 sm:text-xs">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-ink-300" aria-hidden="true" />
-            已结束
-          </p>
-          <p class="num mt-2 text-xl font-semibold leading-none text-ink-700 sm:text-[26px]">{{ counts.FINISHED }}</p>
-          <p class="mt-1.5 text-[10px] leading-4 text-ink-500 sm:text-[11px]">可回看场次详情</p>
-        </div>
-      </section>
+      <ActivityPhaseOverview :counts="groups.counts" @jump="scrollToSection" />
 
-    <section class="surface-card mt-6 flex flex-wrap items-center gap-3 p-5">
-      <div class="w-full sm:w-80">
-        <label for="activity-keyword" class="mb-1.5 block text-xs font-medium text-ink-700">活动 / 商品名称</label>
-        <el-input id="activity-keyword" v-model="keyword" placeholder="输入名称筛选已加载的活动" clearable>
-          <template #prefix>
-            <Search :size="15" aria-hidden="true" />
-          </template>
-        </el-input>
-      </div>
+      <ActivityToolbar v-model:keyword="keyword" :counts="groups.counts" @jump="scrollToSection" />
 
-      <div class="flex flex-wrap gap-2 sm:ml-auto" role="group" aria-label="活动阶段筛选">
-        <el-radio-group v-model="filter" size="default" class="filter-pills">
-          <el-radio-button v-for="option in filters" :key="option.value" :value="option.value">
-            {{ option.label }}
-            <span class="num ml-1 text-xs opacity-70">{{ counts[option.value] }}</span>
-          </el-radio-button>
-        </el-radio-group>
-      </div>
-    </section>
-
-    <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-      <p class="text-xs tracking-wide text-ink-500">
-        当前筛选
-        <span class="num font-semibold text-brand">{{ visible.length }}</span>
-        场
-      </p>
-      <p class="hidden text-xs text-ink-500 sm:block">进行中优先 · 未开始其次 · 已结束置后</p>
-    </div>
-
-    <section class="mt-4">
-      <div v-if="loading" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="index in 6" :key="index" class="surface-card overflow-hidden">
+      <div v-if="loading && !activities.length" class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-busy="true">
+        <div v-for="index in 8" :key="index" class="surface-card overflow-hidden">
           <SkeletonBlock class="aspect-[4/3]" rounded="sm" />
           <div class="space-y-2 p-5">
             <SkeletonBlock class="h-3 w-1/3" />
@@ -228,6 +170,7 @@ load()
 
       <EmptyState
         v-else-if="errorMessage"
+        class="mt-6"
         title="活动加载失败"
         :description="errorMessage"
         action-text="重新加载"
@@ -235,26 +178,73 @@ load()
       />
 
       <EmptyState
-        v-else-if="!visible.length"
-        title="当前筛选下没有活动"
-        description="切换阶段筛选，或清空关键字后再试。活动列表由后端一次性返回，不做分页。"
-        action-text="查看全部"
-        @action="filter = 'ALL'"
+        v-else-if="!hasMatches"
+        class="mt-6"
+        title="没有匹配的活动"
+        :description="
+          hasKeyword ? '换一个关键字，或清空筛选后查看全部场次。' : '活动创建并预热后会出现在这里，刷新页面再试。'
+        "
+        :action-text="hasKeyword ? '清空筛选' : '重新加载'"
+        @action="hasKeyword ? clearKeyword() : load()"
       />
 
-      <div v-else class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <ActivityCard
-          v-for="entry in visible"
-          :key="entry.item.activityId"
-          :activity="entry.item"
+      <div v-else class="mt-6 space-y-6">
+        <UpcomingCarousel :items="groups.upcoming" :now="now" />
+
+        <div class="flex items-center gap-3" aria-hidden="true">
+          <span class="h-px flex-1 bg-gradient-to-r from-transparent via-flash/30 to-flash/40" />
+          <Sparkles :size="14" class="text-flash/60" />
+          <span class="h-px flex-1 bg-gradient-to-l from-transparent via-line to-line" />
+        </div>
+
+        <ActivitySection
+          section-id="live-section"
+          index="02"
+          tone="flash"
+          title="进行中"
+          subtitle="时间窗已开启且仍有库存的场次，先按可抢购排序，再按开场时间先后排列；每页 4 场。"
+          :icon="Flame"
+          :total="liveTotal"
+          :page="livePage"
+          :pages="livePages"
+          :page-size="PAGE_SIZE"
+          :items="liveItems"
           :now="now"
+          empty-title="此刻没有进行中的场次"
+          empty-description="先去「即将开场」看看下一场，或回看已结束的场次详情。"
+          empty-action-text="查看即将开场"
+          @change-page="livePage = $event; scrollToSection('live-section')"
+          @action="scrollToSection('upcoming-section')"
+        />
+
+        <div class="flex items-center gap-3" aria-hidden="true">
+          <span class="h-px flex-1 bg-gradient-to-r from-transparent via-line to-line" />
+          <Archive :size="14" class="text-ink-300" />
+          <span class="h-px flex-1 bg-gradient-to-l from-transparent via-brand/25 to-brand/35" />
+        </div>
+
+        <ActivitySection
+          section-id="ended-section"
+          index="03"
+          tone="muted"
+          title="已结束"
+          subtitle="已结束、已售罄与已取消的场次，按结束时间倒序归档，便于回看价格与库存；每页 4 场。"
+          :icon="Archive"
+          :total="endedTotal"
+          :page="endedPage"
+          :pages="endedPages"
+          :page-size="PAGE_SIZE"
+          :items="endedItems"
+          :now="now"
+          empty-title="还没有已结束的场次"
+          empty-description="活动结束后会自动归档到这里。"
+          @change-page="endedPage = $event; scrollToSection('ended-section')"
         />
       </div>
-    </section>
 
-    <p class="mt-8 rounded-xl border border-line/70 bg-muted/50 px-4 py-3 text-xs leading-5 text-ink-500">
-      说明：后端的 activity.status 是创建时快照，不会随时间自动流转；本页阶段判定以时间窗优先，status 仅作兜底。
-    </p>
+      <p class="mt-8 rounded-xl border border-line/70 bg-muted/50 px-4 py-3 text-xs leading-5 text-ink-500">
+        说明：后端的 activity.status 是创建时快照，不会随时间自动流转；本页阶段判定以时间窗优先，status 仅作兜底。列表接口一次返回全部活动，本页在内存中按阶段分组并分页。
+      </p>
     </div>
   </div>
 </template>

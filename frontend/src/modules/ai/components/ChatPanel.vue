@@ -150,7 +150,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
 <template>
   <section class="surface-card flex h-[calc(100dvh-18rem)] min-h-[420px] flex-col overflow-hidden sm:h-[min(68vh,640px)]">
     <header class="flex items-center gap-3 border-b border-line/70 bg-gradient-to-r from-brand-soft via-surface to-surface px-4 py-4 sm:px-5">
-      <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#B8543A] to-[#8B2F1D] text-[#FFFBF5] shadow-[0_8px_18px_rgba(0,0,0,0.42)]">
+      <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-[#1D4ED8] to-[#1E40AF] text-white shadow-[0_8px_18px_rgba(0,0,0,0.42)]">
         <Bot :size="19" aria-hidden="true" />
       </span>
       <div class="min-w-0">
@@ -165,7 +165,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
 
     <div
       ref="scrollRef"
-      class="flex-1 space-y-4 overflow-y-auto bg-[radial-gradient(ellipse_at_20%_0%,rgba(225,37,27,0.06),transparent_55%)] px-4 py-5 sm:px-5"
+      class="flex-1 space-y-4 overflow-y-auto bg-[radial-gradient(ellipse_at_20%_0%,rgba(29,78,216,0.06),transparent_55%)] px-4 py-5 sm:px-5"
       aria-live="polite"
     >
       <div v-if="!messages.length" class="mx-auto max-w-md py-4 text-center sm:py-8">
@@ -201,7 +201,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
           :class="
             message.role === 'user'
               ? 'border border-brand/15 bg-brand-soft text-brand'
-              : 'bg-gradient-to-br from-[#B8543A] to-[#8B2F1D] text-[#FFFBF5]'
+              : 'bg-gradient-to-br from-[#1D4ED8] to-[#1E40AF] text-white'
           "
         >
           <User v-if="message.role === 'user'" :size="15" aria-hidden="true" />
@@ -212,7 +212,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
           class="max-w-[80%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-6"
           :class="
             message.role === 'user'
-              ? 'rounded-tr-sm bg-gradient-to-br from-[#B8543A] to-[#8B2F1D] text-[#FFFBF5] shadow-[0_8px_18px_rgba(120,72,48,0.2)]'
+              ? 'rounded-tr-sm bg-gradient-to-br from-[#1D4ED8] to-[#1E40AF] text-white shadow-[0_8px_18px_rgba(15,23,42,0.16)]'
               : message.failed
                 ? 'rounded-tl-sm border border-danger/25 bg-danger/10 text-ink-900'
                 : 'rounded-tl-sm border border-line bg-surface text-ink-900 shadow-sm'
@@ -226,7 +226,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
       </div>
 
       <div v-if="sending" class="flex items-center gap-2.5">
-        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#B8543A] to-[#8B2F1D] text-[#FFFBF5]">
+        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#1D4ED8] to-[#1E40AF] text-white">
           <Bot :size="15" aria-hidden="true" />
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-line bg-surface px-4 py-3">
