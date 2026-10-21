@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ArrowUpRight, Bot, Send, Sparkles, User } from 'lucide-vue-next'
+import { ArrowUpRight, Bot, Send, Sparkles, Trash2, User } from 'lucide-vue-next'
 import { sendChat, type ChatTurn } from '@/modules/ai/api'
 import { ApiError, RESULT_CODE } from '@/shared/types/common'
 
@@ -19,6 +19,11 @@ const messages = ref<ChatMessage[]>([])
 const input = ref('')
 const sending = ref(false)
 const scrollRef = ref<HTMLElement | null>(null)
+const inputRef = ref<{
+  focus: () => void
+  textarea?: HTMLTextAreaElement
+  input?: HTMLInputElement
+} | null>(null)
 let messageId = 0
 let lastSentAt = 0
 let controller: AbortController | null = null
@@ -145,6 +150,26 @@ function onKeydown(event: Event | KeyboardEvent): void {
   event.preventDefault()
   send()
 }
+
+function focusInput(): void {
+  // preventScroll 避免页面平滑滚动尚未结束时被聚焦强行拉回
+  const field = inputRef.value?.textarea ?? inputRef.value?.input
+  if (field) {
+    field.focus({ preventScroll: true })
+    return
+  }
+  inputRef.value?.focus()
+}
+
+function clearMessages(): void {
+  controller?.abort()
+  controller = null
+  sending.value = false
+  input.value = ''
+  messages.value = []
+}
+
+defineExpose({ focusInput })
 </script>
 
 <template>
@@ -160,7 +185,16 @@ function onKeydown(event: Event | KeyboardEvent): void {
         </p>
         <p class="mt-0.5 truncate text-xs text-ink-500">基于商品与活动目录回答，不读取账号密码</p>
       </div>
-      <span class="ml-auto hidden text-[10px] uppercase tracking-[0.2em] text-ink-500 sm:block">Concierge</span>
+      <button
+        v-if="messages.length"
+        type="button"
+        class="ml-auto inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface/80 px-3 text-[11px] text-ink-500 transition-colors hover:border-brand/30 hover:text-brand-dark"
+        aria-label="清空对话"
+        @click="clearMessages"
+      >
+        <Trash2 :size="13" aria-hidden="true" />
+        <span class="hidden sm:inline">清空对话</span>
+      </button>
     </header>
 
     <div
@@ -242,6 +276,7 @@ function onKeydown(event: Event | KeyboardEvent): void {
       <label for="ai-input" class="sr-only">输入问题</label>
       <el-input
         id="ai-input"
+        ref="inputRef"
         v-model="input"
         type="textarea"
         :rows="2"
@@ -253,7 +288,13 @@ function onKeydown(event: Event | KeyboardEvent): void {
       />
       <div class="mt-2 flex items-center justify-between gap-3">
         <p class="text-[11px] leading-5 text-ink-500">公开接口，请勿输入密码、手机号等敏感信息。</p>
-        <el-button type="primary" native-type="submit" :loading="sending" :disabled="!input.trim()">
+        <el-button
+          type="primary"
+          native-type="submit"
+          class="!h-11 !px-5"
+          :loading="sending"
+          :disabled="!input.trim()"
+        >
           <Send :size="14" class="mr-1.5" aria-hidden="true" />
           发送
         </el-button>
